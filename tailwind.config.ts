@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * SERVO Design Tokens — single source of truth (§2 of the master prompt).
+ * LUMORA Design Tokens — single source of truth (§2 of the master prompt).
  * Deep-navy dominance, restrained sand-gold accents, warm neutral surfaces.
  */
 const config: Config = {

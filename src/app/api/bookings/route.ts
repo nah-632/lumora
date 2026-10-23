@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     }
 
     const reference =
-      "SRV-" +
+      "LMR-" +
       crypto.randomBytes(5).toString("base64").replace(/[^A-Z0-9]/g, "Q").slice(0, 8);
 
     const serviceDetails = JSON.stringify({ category: d.category, notes: d.notes });
