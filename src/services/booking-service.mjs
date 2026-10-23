@@ -6,7 +6,7 @@ function genRef() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let s = "";
   for (let i = 0; i < 8; i++) s += alphabet[crypto.randomInt(alphabet.length)];
-  return "SRV-" + s;
+  return "LMR-" + s;
 }
 
 export async function createBooking(draft, actor = "customer") {

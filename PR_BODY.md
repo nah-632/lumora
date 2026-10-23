@@ -1,4 +1,4 @@
-## SERVO — Core Platform (Phase 2–5 foundation)
+## LUMORA — Core Platform (Phase 2–5 foundation)
 
 Premium bilingual home-services platform for Bahrain. This PR lands the
 domain, booking engine, admin operations and Arabic-first UI foundation.

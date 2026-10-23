@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SERVO — خدمات منزلية متكاملة",
+  title: "LUMORA — خدمات منزلية متكاملة",
   description: "خدمات منزلية متكاملة بجودة وموثوقية — من الصيانة والتنظيف إلى التكييف والكهرباء",
 };
 

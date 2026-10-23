@@ -1,5 +1,5 @@
 /**
- * SERVO: shared Zod validation schemas (§3 — typed end to end).
+ * LUMORA: shared Zod validation schemas (§3 — typed end to end).
  */
 import { z } from "zod";
 import { normalizeBahrainPhone } from "@/domain/bahrain.mjs";
@@ -34,5 +34,5 @@ export const bookingDraftSchema = z.object({
 
 export type BookingDraft = z.infer<typeof bookingDraftSchema>;
 
-export const bookingRefSchema = z.string().regex(/^SRV-[A-Z2-7]{8}$/);
+export const bookingRefSchema = z.string().regex(/^LMR-[A-Z2-7]{8}$/);
 export type BookingRef = z.infer<typeof bookingRefSchema>;

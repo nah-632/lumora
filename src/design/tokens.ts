@@ -1,5 +1,5 @@
 /**
- * SERVO design tokens — runtime values (§2).
+ * LUMORA design tokens — runtime values (§2).
  * Used by UI components; Tailwind config mirrors these.
  */
 export const tokens = {

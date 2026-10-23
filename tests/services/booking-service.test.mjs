@@ -38,7 +38,7 @@ const created = await createBooking({
 });
 assert.ok(created.id, "booking created with id");
 assert.equal(created.state, "pending_confirmation");
-assert.match(created.reference, /^SRV-/);
+assert.match(created.reference, /^LMR-/);
 
 // IDMPOTENT REPLAY — same key returns same booking, no new row
 const replay = await createBooking({ ...created && {

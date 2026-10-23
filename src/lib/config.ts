@@ -1,5 +1,5 @@
 /**
- * SERVO: config validated at boot (§3 — fail fast).
+ * LUMORA: config validated at boot (§3 — fail fast).
  * Feature flags default to false (§2: unverified = off).
  */
 export interface FeatureFlags {
