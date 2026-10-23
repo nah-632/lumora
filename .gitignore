@@ -1,0 +1,10 @@
+node_modules
+.next
+.env*.local
+*.log
+.superpowers
+
+*.tsbuildinfo
+tsc.log
+build.log
+dev.log
