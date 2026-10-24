@@ -47,6 +47,8 @@ export interface PreparedAlert {
   suggestedAction: string | null;
   evidence: string | null;
   assessmentCount: number;
+  /** Distinct signals behind this alert, e.g. grade drop + missing work = 2. */
+  basisCount: number;
   dedupeKey: string;
   promptVersion: string;
 }
@@ -199,6 +201,13 @@ export async function generateAlerts(
     const subject = matching?.signals.find((s) => item.evidence?.includes(s.subject)) ?? matching?.signals[0];
     const assessmentCount = subject?.gradesConsidered ?? 0;
 
+    // basis_count answers "why did this fire?" — it counts the distinct signals
+    // present for this student, so the teacher can see the reasoning. It is
+    // computed here rather than taken from the model, which is never trusted
+    // with arithmetic.
+    const notableSignals = (matching?.signals ?? []).filter(isNotable);
+    const basisCount = Math.max(1, notableSignals.length);
+
     prepared.push({
       studentId: candidate.id,
       alertType: item.alertType,
@@ -207,6 +216,7 @@ export async function generateAlerts(
       suggestedAction: item.suggestedAction ?? null,
       evidence: item.evidence ?? null,
       assessmentCount,
+      basisCount,
       dedupeKey: subject ? buildDedupeKey(subject) : `${item.alertType}:general`,
       promptVersion: STUDENT_ALERTS_PROMPT_VERSION,
     });

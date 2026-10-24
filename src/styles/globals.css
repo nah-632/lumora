@@ -9,6 +9,11 @@
    rather than left at defaults. */
 
 :root {
+  /* Font stacks. Arabic and Latin are distinct: an Arabic face must set Arabic,
+     and the Latin face must not be used for it. */
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Naskh Arabic", "Segoe UI", system-ui, sans-serif;
+  --font-latin: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
   --lumora-red: #DA291C;
   --lumora-navy: #1D2A44;
   --lumora-purple: #4B1E61;

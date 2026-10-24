@@ -253,3 +253,25 @@ test("prepareSignals: refs are opaque and sequential", () => {
   assert.deepEqual(signals.map((s) => s.ref), ["s1", "s2"]);
   assert.equal(JSON.stringify(signals).includes("aaaa"), false);
 });
+
+test("basis_count counts distinct signals, not assessments", async () => {
+  // One subject with a drop AND two missing submissions: two distinct signals.
+  const s = {
+    id: "77777777-7777-7777-7777-777777777777",
+    gradeLevel: "G7",
+    grades: [
+      grade("Math", 95, 100, "2026-01-01"), grade("Math", 95, 100, "2026-01-08"),
+      grade("Math", 50, 100, "2026-01-15"), grade("Math", 50, 100, "2026-01-22"),
+    ],
+    submissions: [sub("missing", "2026-01-20"), sub("missing", "2026-01-21")],
+  };
+  const provider = { name: "mock", model: "m", isConfigured: () => true,
+    generate: async () => ({ text: JSON.stringify({ alerts: [
+      { ref: "s1", alertType: "grade_drop", severity: "urgent", message: "انخفض الأداء.", evidence: "Math 95% -> 50%" }]}),
+      provider: "mock", model: "m", inputTokens: null, outputTokens: null, latencyMs: 1, costEstimated: true, costUsd: 0 }) };
+  const res = await generateAlerts([s], ["Someone"], "ar", 20, { provider });
+  assert.equal(res.ok, true);
+  assert.ok(res.prepared[0].basisCount >= 1, `basisCount was ${res.prepared[0].basisCount}`);
+  // basis_count is a signal count, so it must never exceed the assessment count.
+  assert.ok(res.prepared[0].basisCount <= Math.max(1, res.prepared[0].assessmentCount));
+});

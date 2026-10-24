@@ -13,7 +13,11 @@ export interface StudentAlert {
   suggestedAction: string | null;
   evidence: string | null;
   assessmentCount: number | null;
+  /** How many distinct signals produced this alert — answers "why did it fire?". */
+  basisCount: number | null;
   isRead: boolean;
+  snoozedUntil: string | null;
+  dismissed?: boolean;
   createdAt: string;
 }
 
@@ -27,9 +31,13 @@ interface Props {
     dismiss: string;
     dismissReason: string;
     basedOn: string;
+    /** e.g. "Based on {count} signals" */
+    basis: string;
     evidence: string;
     suggestedAction: string;
     aiNote: string;
+    snoozed: string;
+    dismissed: string;
   };
   locale: "ar" | "en";
   onAction?: (a: { action: "mark_read" | "snooze" | "dismiss"; id: string; reason?: string }) => void;
@@ -71,6 +79,11 @@ export function AlertCard({ alert, labels, locale, onAction }: Props) {
               {labels.severity[alert.severity]}
             </span>
             <span className="text-xs text-[var(--lumora-ink-soft)]">{labels.type[alert.alertType]}</span>
+            {alert.basisCount != null && alert.basisCount > 0 && (
+              <span className="text-xs text-[var(--lumora-ink-soft)] tnum">
+                {labels.basis.replace("{count}", String(alert.basisCount))}
+              </span>
+            )}
             {alert.assessmentCount != null && alert.assessmentCount > 0 && (
               <span className="text-xs text-[var(--lumora-ink-soft)] tnum">
                 {labels.basedOn.replace("{count}", String(alert.assessmentCount))}
@@ -96,9 +109,19 @@ export function AlertCard({ alert, labels, locale, onAction }: Props) {
             </p>
           )}
 
+          {alert.snoozedUntil && (
+            <p className="mt-2 text-xs text-[var(--lumora-ink-soft)]">
+              <span className="font-medium">{labels.snoozed}: </span>
+              <bdi dir="ltr" className="tnum">{alert.snoozedUntil.slice(0, 10)}</bdi>
+            </p>
+          )}
+          {alert.dismissed && (
+            <p className="mt-2 text-xs font-medium text-[var(--lumora-ink-soft)]">{labels.dismissed}</p>
+          )}
+
           <p className="mt-3 text-[11px] text-[var(--lumora-ink-soft)]">{labels.aiNote}</p>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className={`mt-3 flex flex-wrap items-center gap-2 ${alert.dismissed ? "hidden" : ""}`}>
             {!alert.isRead && (
               <button
                 type="button"

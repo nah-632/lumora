@@ -32,6 +32,9 @@ export async function POST(req: Request) {
   const res = await restRequest(env, token, "students", {
     method: "POST",
     headers: { prefer: "return=representation" },
+    // teacher_id is deliberately omitted: it defaults to auth.uid() in the
+    // database, and the INSERT policy requires it to equal the caller. Sending
+    // it from the client would be redundant and is never trusted.
     body: JSON.stringify({
       name: parsed.data.name,
       grade_level: parsed.data.gradeLevel,

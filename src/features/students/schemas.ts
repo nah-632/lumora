@@ -56,6 +56,13 @@ export const alertTypeSchema = z.enum([
 
 export const alertSeveritySchema = z.enum(["info", "attention", "urgent"]);
 
+export const interventionCreateSchema = z.object({
+  studentId: z.string().uuid(),
+  action: z.string().trim().min(3).max(1000),
+  subject: z.string().trim().max(80).optional(),
+  alertId: z.string().uuid().optional(),
+});
+
 /** Marks an alert as read / snoozed / dismissed with a reason. */
 export const alertActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("mark_read"), alertId: z.string().uuid() }),
