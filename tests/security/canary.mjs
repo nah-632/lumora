@@ -135,6 +135,12 @@ try {
     }).then((r) => r.json());
     const row = Array.isArray(body) ? body[0] : body?.result?.[0];
     const has = Boolean(row && (row.table_grant === true || row.column_grant === true));
+    // Print the measured privilege state. Without this line, "NOT APPLICABLE" is
+    // an assertion about a database nobody can inspect from the log.
+    console.log(
+      `  privilege check — authenticated ${c.needsGrant.privilege} on ${c.needsGrant.table}: ` +
+        `table=${row?.table_grant} column=${row?.column_grant}`,
+    );
     if (has) { applicable.push(c); }
     else {
       console.log(`NOT APPLICABLE — ${c.name}: authenticated has no ${c.needsGrant.privilege} on ${c.needsGrant.table} (table or column level), so the breach cannot fire.`);

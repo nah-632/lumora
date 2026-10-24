@@ -85,7 +85,15 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
-        run: npm run test:isolation
+        run: |
+          set +e
+          npm run test:isolation 2>&1 | tee isolation.log
+          status=${PIPESTATUS[0]:-$?}
+          if [ "$status" -ne 0 ]; then
+            echo "::error::isolation suite failed — failures below"
+            grep -E "^(FAIL|XFAIL)" isolation.log || true
+          fi
+          exit "$status"
 
       # The alert's basis sentence is a claim about rows; this proves the claim
       # resolves to real records and that a false one is detectable.
@@ -100,13 +108,6 @@ jobs:
       # A canary that dies mid-run can leave a weakened policy behind. This step
       # snapshots the policy definitions before the canary and restores them
       # after, whatever happened in between.
-      - name: Snapshot policies before canary
-        id: snap
-        if: steps.creds.outputs.configured == 'true'
-        env:
-          MGMT: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
-          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-        run: node tests/security/snapshot.mjs > policies-before.json
 
   canary:
     name: Canary — the isolation suite can fail
@@ -146,6 +147,26 @@ jobs:
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # A canary that dies mid-run can leave a weakened policy behind. This runs
+      # first and its output is the ground truth a recovery would read; it is also
+      # what caught a silent "0 issues" run in the past.
+      - name: Snapshot policies (before)
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          MGMT: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_MANAGEMENT_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          node tests/security/snapshot.mjs > policies-before.json 2>&1 || { echo "::error::policy snapshot failed"; cat policies-before.json; exit 1; }
+          python3 - <<'PY' || true
+          import json
+          rows = json.load(open("policies-before.json"))
+          print(f"{len(rows)} policies captured")
+          for r in rows:
+              print(f"  {r['tablename']}.{r['policyname']} [{r['cmd']}]")
+          PY
 
       - name: Run canary
         if: steps.creds.outputs.configured == 'true'
