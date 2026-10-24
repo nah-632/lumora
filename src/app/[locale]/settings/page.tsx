@@ -3,6 +3,13 @@ import { requireUser } from "@/lib/auth/guards";
 import { createSessionClient } from "@/lib/auth/server";
 import { AlertSettingsForm } from "@/features/students/components/AlertSettingsForm";
 
+// Every page here depends on the request (session cookie or locale), so it
+// must never be prerendered. Without this Next attempts to render these at
+// build time, where cookies() and the auth client are unavailable, and the
+// prerender worker stalls.
+export const dynamic = "force-dynamic";
+
+
 export default async function SettingsPage({
   params,
 }: {

@@ -4,48 +4,84 @@ on:
   pull_request:
   push:
     branches: [feat/student-tracking, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality:
-    name: Type-check, lint, unit tests, build
+    name: Type-check, lint, tests, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
-      - run: npm ci
+
+      # npm ci installs exactly what package-lock.json pins. If the lockfile
+      # drifts from package.json this fails here rather than silently resolving
+      # different versions than the ones that were tested.
+      - name: Install dependencies
+        run: npm ci
+
       - name: Type-check
         run: npm run type-check
+
       - name: Lint
         run: npm run lint
+
       - name: Unit tests
         run: npm test
+
       - name: Build
         run: npm run build
+        env:
+          # Build-time placeholders. The app must build without real secrets;
+          # anything that needs them is deferred to request time.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
 
   isolation:
     name: RLS isolation (real sessions)
     runs-on: ubuntu-latest
-    # Secrets are configured in the repository settings. The job fails loudly
-    # rather than skipping, so a missing secret cannot silently disable the
-    # only test that proves one teacher cannot read another's data.
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
-      - run: npm ci
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The suite creates two throwaway accounts, so it needs credentials.
+      # When they are absent this fails with a precise message instead of
+      # skipping: a skipped isolation test would silently remove the only proof
+      # that one teacher cannot read another's data.
+      - name: Check credentials
+        env:
+          TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          TEST_ANON: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          TEST_SERVICE: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: |
+          missing=""
+          [ -z "$TEST_URL" ] && missing="$missing SUPABASE_TEST_URL"
+          [ -z "$TEST_ANON" ] && missing="$missing SUPABASE_TEST_ANON_KEY"
+          [ -z "$TEST_SERVICE" ] && missing="$missing SUPABASE_TEST_SERVICE_ROLE_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Isolation secrets missing:$missing"
+            echo "::error::Add them at Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
       - name: Run isolation suite
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
-        run: |
-          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::Isolation secrets are not configured. This job must not pass silently."
-            exit 1
-          fi
-          npm run test:isolation
+        run: npm run test:isolation

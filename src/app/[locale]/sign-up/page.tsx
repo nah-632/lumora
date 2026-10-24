@@ -5,6 +5,13 @@ import { AuthForm } from "@/features/auth/components/AuthForm";
 import { signUpAction } from "@/lib/auth/actions";
 import { getSessionUser } from "@/lib/auth/server";
 
+// Every page here depends on the request (session cookie or locale), so it
+// must never be prerendered. Without this Next attempts to render these at
+// build time, where cookies() and the auth client are unavailable, and the
+// prerender worker stalls.
+export const dynamic = "force-dynamic";
+
+
 export default async function SignUpPage({
   params,
 }: {

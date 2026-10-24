@@ -4,6 +4,13 @@ import { createSessionClient } from "@/lib/auth/server";
 import { StudentsWorkspace } from "@/features/students/components/StudentsWorkspace";
 import type { RosterStudent } from "@/features/students/components/StudentRoster";
 
+// Every page here depends on the request (session cookie or locale), so it
+// must never be prerendered. Without this Next attempts to render these at
+// build time, where cookies() and the auth client are unavailable, and the
+// prerender worker stalls.
+export const dynamic = "force-dynamic";
+
+
 /**
  * Roster page.
  *

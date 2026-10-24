@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Lint runs as its own gate; keep the build focused on compilation.
-  eslint: { ignoreDuringBuilds: true },
+  // Lint is NOT skipped. ESLint runs both as its own CI step (for clear
+  // attribution) and during the build, so a lint error cannot reach main.
+  eslint: { ignoreDuringBuilds: false },
   poweredByHeader: false,
   reactStrictMode: true,
 };
