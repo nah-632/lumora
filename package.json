@@ -14,7 +14,8 @@
     "test:isolation": "node tests/security/isolation.mjs",
     "verify": "npm run type-check && npm run test",
     "lint": "next lint",
-    "test:build": "sh build-tests.sh"
+    "test:build": "sh build-tests.sh",
+    "test:canary": "node tests/security/canary.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.5.2",

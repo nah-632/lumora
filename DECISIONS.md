@@ -72,3 +72,57 @@ reading the SQL.
 **Decision:** `teacher_id` defaults to `auth.uid()` on all student tables.
 **Consequences:** Clients never send `teacher_id`. Forging another teacher's id is
 still rejected by the policy.
+
+## ADR-009 — Next.js 14 and React 18 are pinned deliberately
+**Date:** 2026-10-24 · **Status:** APPROVED
+**Context:** `npm audit` recommends Next 16 and React 19. Both are major upgrades.
+**Decision:** Stay on Next 14.2.35 / React 18.3.1 until a planned migration.
+**Why:**
+- This device runs Next 14.2.35 / React 18.3.1 and cannot complete a full install
+  of the Next 15 tree, so a local upgrade could not be verified before merging.
+- `useActionState` is React 19-only; this codebase already ships a React 18
+  equivalent (`src/lib/auth/useActionState.ts`). A React 19 upgrade is therefore
+  a code migration, not a version bump.
+- Next 15+ changes `cookies()`/`params` to async APIs across every page. That is a
+  multi-day refactor that must be done with a working local build, which this
+  environment cannot provide.
+**Risk accepted:** the Next advisory below. See ADR-010 for the exposure analysis.
+**Migration trigger:** when a CI-only workflow can validate the upgrade, or when a
+Next advisory becomes exploitable in this configuration.
+**Rollback:** none needed; this is the current state.
+
+## ADR-010 — npm audit findings: what is actually exploitable
+**Date:** 2026-10-24 · **Status:** RECORDED
+`npm audit` against the real registry reports **13 advisories: 1 critical, 5 high,
+5 moderate, 2 low**. Assessed one by one rather than counted:
+
+| Package | Sev | Exploitable here? | Reasoning |
+|---|---|---|---|
+| next | critical | **Not in this configuration** | Advisories concern the Image Optimizer with remote `remotePatterns`, RSC deserialization, and rewrite smuggling. No `remotePatterns` are configured, no rewrites exist, and the app is not self-hosted on a public Node server yet. Must be re-assessed before deployment. |
+| zod | high | **No** | Advisory requires validating oversized *constrained collections*. The only `z.array()` in the codebase is bounded with `.max(200)`, which is the documented mitigation. |
+| postcss | high | **No** | Present only as a transitive build-time dependency of Next. It does not process untrusted input at runtime. |
+| glob | high | **No** | CLI command-injection advisory; `glob` is a build-time transitive dependency and its CLI is never invoked. |
+| @next/eslint-plugin-next, eslint-config-next | high | **No** | Lint-time only; never shipped. |
+| esbuild | moderate | **No** | Dev-server advisory; esbuild is used only to transpile test fixtures, never to serve requests. |
+| next-intl | moderate | **No** | Open-redirect and precompile advisories. Redirect targets are built from validated locale values (`ar`/`en`), never from user input; `experimental.messages.precompile` is not used. |
+| tailwindcss / postcss-nested / postcss-selector-parser | moderate | **No** | Build-time only. |
+| @supabase/auth-js | low | **No** | Malformed-path routing; the client is used server-side with fixed paths. |
+
+**Conclusion:** no advisory is currently exploitable in this configuration. This is
+an assessment, not a guarantee, and it must be revisited before any public
+deployment. The reproducible blocker is recorded in ADR-011.
+
+## ADR-011 — Legal review status
+**Date:** 2026-10-24 · **Status:** CONFIRMED BY PRODUCT OWNER
+The Product Owner has confirmed that **the legal review is complete and approved**.
+The legal review is therefore removed from the blockers list.
+**Consequence:** this removes a process blocker. It does **not** constitute a
+compliance claim by the engineering team, and the privacy policy must still state
+the real hosting region and the AI sub-processor before launch.
+**Blocker list now:** separate staging/production Supabase projects, and rate
+limiting on alert generation.
+
+## ADR-012 — Branch protection
+**Date:** 2026-10-24 · **Status:** PENDING OWNER ACTION
+Both CI jobs (`Type-check, lint, tests, build` and `RLS isolation`) must be
+required checks on `main` before this branch becomes `main`.

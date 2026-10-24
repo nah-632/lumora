@@ -176,6 +176,40 @@ async function main() {
   });
   check("A cannot log an intervention on B's student", !forgeIntervention.ok, `http ${forgeIntervention.status}`);
 
+  // Alerts are the AI evidence trail: a teacher may read and toggle status
+  // flags, but must not be able to delete them or rewrite their content.
+  const alertsB = await svc(`/rest/v1/student_alerts?select=id&student_id=eq.${sB.id}`).then((r) => r.json());
+  const alertBId = alertsB[0]?.id;
+
+  if (alertBId) {
+    // Attempt the delete, then verify against the SERVICE ROLE that the row is
+    // still there. Checking only the HTTP status is not enough: with no DELETE
+    // policy PostgREST can answer 200 while deleting nothing, and a test that
+    // trusts the status alone cannot tell "blocked" from "silently did nothing".
+    const delAlert = await asUser(A.token, `student_alerts?id=eq.${alertBId}`, { method: "DELETE" });
+    const stillThere = await svc(
+      `/rest/v1/student_alerts?select=id&id=eq.${alertBId}`,
+    ).then((r) => r.json());
+    const survived = Array.isArray(stillThere) && stillThere.length === 1;
+    check("A cannot delete B's alert (row survives)", survived,
+          `http ${delAlert.status}, row present=${survived}`);
+  } else {
+    check("A cannot delete B's alert (row survives)", false, "fixture missing: no B alert to target");
+  }
+
+  // Even for B's own alert, A must not be able to rewrite the message.
+  if (alertBId) {
+    const rewrite = await asUser(A.token, `student_alerts?id=eq.${alertBId}`, {
+      method: "PATCH",
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify({ message: "rewritten by A" }),
+    });
+    const rewriteRows = rewrite.ok ? await rewrite.json().catch(() => []) : [];
+    check("A cannot rewrite B's alert message",
+          !rewrite.ok || (Array.isArray(rewriteRows) && rewriteRows.length === 0),
+          rewrite.ok ? `updated ${Array.isArray(rewriteRows) ? rewriteRows.length : "?"}` : `http ${rewrite.status}`);
+  }
+
   // Positive control: A can still operate on their own data. Without this the
   // suite could pass by the tables simply being unusable.
   const ownInsert = await asUser(A.token, "students", {
