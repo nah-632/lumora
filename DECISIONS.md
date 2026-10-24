@@ -126,3 +126,94 @@ limiting on alert generation.
 **Date:** 2026-10-24 · **Status:** PENDING OWNER ACTION
 Both CI jobs (`Type-check, lint, tests, build` and `RLS isolation`) must be
 required checks on `main` before this branch becomes `main`.
+
+## ADR-012 — RLS policy enforcement on the INSERT path (measured, unresolved)
+**Date:** 2026-10-25 · **Status:** OPEN — needs owner decision
+
+While hardening the isolation suite we measured behaviour that the migrations
+assume but do not guarantee:
+
+1. **Omitted `teacher_id` bypasses the INSERT policy on this stack.** With
+   `teacher_id default auth.uid()`, a signed-in client that leaves the column out
+   of the request gets `201` while a client that sends `teacher_id: null` gets
+   `42501`. Under the same conditions the explicit attack (`teacher_id = B`)
+   returns `42501`. The row that lands is owned by the attacker, so no session
+   crosses the account boundary — but the policy was not consulted for the
+   defaulted value.
+2. **The same SQL refuses it inside a role-switched function** (`23503`, because
+   `auth.uid()` is not evaluated the same way there). The behaviour therefore
+   depends on where the INSERT is executed, which is exactly why it cannot be
+   treated as settled.
+3. **Permission stage can mask the policy stage.** `authenticated` holds no
+   `INSERT` privilege on `student_grades` (only column-level grants on the alert
+   flags), so a permissive policy on that table is never reached. When the insert
+   is serviced with a role that holds the privilege, the same permissive policy
+   **does** write a foreign row (measured 201; refused 403 under the real policy).
+
+**Proposed fix (not applied):** move the owner assignment out of the column
+default into a `BEFORE INSERT` trigger that sets `teacher_id := auth.uid()` when
+null, and `ALTER TABLE … ALTER COLUMN teacher_id DROP DEFAULT`. In the prototype
+run the policy then saw the final value. This is a schema change across six
+tables and a column-default contract change, so it is proposed, not made.
+
+**Consequences today:** the canary marks four assertions as *not demonstrated*
+(UPDATE under a permissive SELECT, DELETE×2 on tables with no DELETE grant, and
+the explicit INSERT attack). The suite still proves them empirically on every run;
+what is missing is proof that they can fail. `tests/security/open-cases.mjs`
+prints the current table.
+
+## ADR-013 — npm audit triage by surface, and the Next 15 upgrade plan
+**Date:** 2026-10-25 · **Status:** PROPOSED — upgrade is a pre-launch blocker
+
+`npm audit --registry=https://registry.npmjs.org` (this device's default registry
+mirror does not implement the audit endpoint) reports 13 advisories: 1 critical,
+5 high, 5 moderate, 2 low. Thirteen, because several advisories sit behind one
+package version; the critical `next` finding alone carries 24 advisory entries.
+
+| Advisory | CVE | Severity | Middleware | Server Actions | Auth | Cookies |
+|---|---|---|---|---|---|---|
+| GHSA-9g9p-9gw9-jx7f (Image Optimizer remotePatterns DoS) | CVE-2025-59471 | moderate* | no | no | no | no |
+| GHSA-h25m-26qc-wcjf (RSC request deserialization DoS) | — | high | no | **yes** (RSC endpoint) | no | no |
+| GHSA-8h8q-6873-q5fj (RSC DoS) | — | high | no | **yes** (RSC endpoint) | no | no |
+| GHSA-q4gf-8mx6-v5v3 (RSC DoS) | — | high | no | **yes** (RSC endpoint) | no | no |
+| GHSA-mrhx-c7xc-m3w5 (zod unbounded array) | CVE-2023-54404 | high | no | no | no | no |
+| GHSA-5j98-mcp5-4vw2 (glob CLI command injection) | CVE-2025-64756 | high | no | no | no | no |
+| GHSA-qx2v-qp2m-jg93 / -6g55 / -fxqj / -r28c (postcss) | — | high | no | no | no | no |
+| GHSA-3g8h-86w9-wvmq (Middleware redirect cache poisoning) | — | moderate | **yes** | no | no | no |
+| GHSA-36qx-fr4f-26g5 (Middleware bypass, Pages Router i18n) | — | moderate | **yes** | no | no | no |
+| GHSA-955p-x3mx-jcvp (Server Function endpoint disclosure) | — | moderate | no | **yes** | borderline | no |
+| GHSA-8f24-v5vv-gm5j (next-intl open redirect) | CVE-2026-40299 | moderate | no | no | no | no |
+| GHSA-8r88-6cj9-9fh5 (@supabase/auth-js path routing) | — | low | no | no | borderline | no |
+
+\* `npm audit` reports `next` as critical as a package; this individual advisory
+is rated moderate by the publisher. The table follows the publisher.
+
+**Why they are not exploitable today, judged per surface:**
+- *Middleware:* the jobs use `createServerClient` only to refresh the session
+  cookie; locale routing is hand-written. `next-intl`'s middleware is not used at
+  all (`createMiddleware` appears nowhere), so CVE-2026-40299 cannot fire — but
+  the dependency is still flagged.
+- *Server Actions:* two auth actions exist. The RSC deserialization advisories
+  are availability issues (CPU), not confidentiality; there is no public bucket
+  and no unauthenticated Server Function that returns data.
+- *Auth/Cookies:* sessions are httpOnly cookies set by `@supabase/ssr`; no
+  token is read from a query string.
+- *zod:* the only `z.array` is `.max(200)`; every other schema is an object of
+  bounded strings. The advisory needs an unbounded array.
+- *postcss/glob:* build-time only; neither runs at request time.
+
+**Upgrade plan — `chore/nextjs-15-upgrade`, separate branch, blocked until then:**
+1. Pin the target to a patched 15.5.x (`>= 15.5.16`) — the RSC advisories are
+   fixed at 15.5.15/15.5.16 and the Image Optimizer at 15.5.14.
+2. React 19 alongside it; `useActionState` replaces `src/lib/react/useActionState.ts`
+   (written for React 18, delete it).
+3. `cookies()`, `params` and `searchParams` become async — every page passes
+   `params: Promise<…>` already, so this is mostly mechanical.
+4. `next-intl` 3 → 4 (peer range excludes 14-only setups and the open redirect is
+   fixed in 4.9.1). The middleware does not use `next-intl`, so the risk is
+   confined to `getTranslations`.
+5. Re-run: type-check, lint, 27 unit tests, isolation (24 assertions + 1 xfail),
+   evidence (11), canary (7 injectable cases), build in CI.
+6. Roll back = revert the branch; nothing in `supabase/` changes for this upgrade.
+
+`npm audit` is now part of every phase report, run against the public registry.

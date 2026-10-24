@@ -25,18 +25,41 @@ import {
   computeStudentSignals,
   buildDedupeKey,
   isNotable,
+  signalEvidence,
   type GradeRow,
   type SubmissionRow,
   type StudentSignal,
   type SubjectSignal,
 } from "../lib/signals";
 import type { AIProvider } from "@/lib/ai/provider";
+import {
+  computeBasis,
+  isFiringFor,
+  requiredSourcesFor,
+  DEFAULT_TREND_THRESHOLD_PCT,
+  DEFAULT_MISSING_WORK_THRESHOLD,
+  type BasisKind,
+  type RequiredSources,
+} from "../lib/alert-basis";
 
 export interface CandidateStudent {
   id: string;
   gradeLevel: string;
   grades: GradeRow[];
   submissions: SubmissionRow[];
+}
+
+/** Which source records an alert rests on, and how many of them. */
+export interface PreparedBasis {
+  kind: BasisKind;
+  count: number;
+}
+
+/** One source row an alert rests on, with the part it plays. */
+export interface PreparedEvidencePart {
+  kind: BasisKind;
+  role: "baseline" | "recent" | "missing";
+  id: string;
 }
 
 export interface PreparedAlert {
@@ -46,9 +69,15 @@ export interface PreparedAlert {
   message: string;
   suggestedAction: string | null;
   evidence: string | null;
+  /** Assessments examined for the subject this alert is about. */
   assessmentCount: number;
-  /** Distinct signals behind this alert, e.g. grade drop + missing work = 2. */
-  basisCount: number;
+  /** Null when the count cannot be established; the UI then shows no line. */
+  basisKind: BasisKind | null;
+  basisCount: number | null;
+  /** Which source records this alert rests on, for re-verification. */
+  evidenceIds: string[];
+  /** Each id with the part it plays, so a check knows what to look for. */
+  evidenceParts: PreparedEvidencePart[];
   dedupeKey: string;
   promptVersion: string;
 }
@@ -201,12 +230,50 @@ export async function generateAlerts(
     const subject = matching?.signals.find((s) => item.evidence?.includes(s.subject)) ?? matching?.signals[0];
     const assessmentCount = subject?.gradesConsidered ?? 0;
 
-    // basis_count answers "why did this fire?" — it counts the distinct signals
-    // present for this student, so the teacher can see the reasoning. It is
-    // computed here rather than taken from the model, which is never trusted
-    // with arithmetic.
-    const notableSignals = (matching?.signals ?? []).filter(isNotable);
-    const basisCount = Math.max(1, notableSignals.length);
+    // basis_kind / basis_count answer "what is this sentence based on?" — the
+    // number of assessment or submission records behind it. Computed from the
+    // same signal the alert is about, never taken from the model, which is never
+    // trusted with arithmetic. When the count cannot be established the pair is
+    // null and the UI renders no "Based on …" line.
+    const firing = subject
+      ? isFiringFor(subject, item.alertType as "grade_drop" | "missing_work" | "positive_trend" | "follow_up")
+      : false;
+    const basis =
+      subject && firing
+        ? computeBasis({
+            alertType: item.alertType,
+            gradesConsidered: subject.gradesConsidered,
+            missingCount: subject.missingCount,
+            missingIsNotable: firing,
+          })
+        : null;
+
+    // The evidence ids name the records that fired this alert, so the stored
+    // claim can be checked against the database later.
+    const ev = subject && candidate
+      ? signalEvidence(subject.subject, candidate.grades, candidate.submissions)
+      : null;
+    const required: RequiredSources | null = subject
+      ? requiredSourcesFor(subject, item.alertType, DEFAULT_TREND_THRESHOLD_PCT, DEFAULT_MISSING_WORK_THRESHOLD)
+      : null;
+    // The prefix names the source records in a sentence the teacher can read:
+    // "assessments 3 & 4 (85% → 52%)" or "2 missing submissions". Only ids that
+    // exist are stored; the prefix is the human form of the same list.
+    const parts: PreparedEvidencePart[] = [];
+    const populate = (
+      rows: Array<{ id?: string; ordinal: number }>,
+      kind: BasisKind,
+      role: PreparedEvidencePart["role"],
+    ) => {
+      for (const row of rows) {
+        if (row.id) parts.push({ kind, role, id: row.id });
+      }
+    };
+    if (ev && required) {
+      if (required.assessments.includes("baseline")) populate(ev.baseline, "assessments", "baseline");
+      if (required.assessments.includes("recent")) populate(ev.recent, "assessments", "recent");
+      if (required.submissions) populate(ev.missing, "submissions", "missing");
+    }
 
     prepared.push({
       studentId: candidate.id,
@@ -216,7 +283,10 @@ export async function generateAlerts(
       suggestedAction: item.suggestedAction ?? null,
       evidence: item.evidence ?? null,
       assessmentCount,
-      basisCount,
+      basisKind: basis?.kind ?? null,
+      basisCount: basis?.count ?? null,
+      evidenceIds: parts.map((e) => e.id),
+      evidenceParts: parts,
       dedupeKey: subject ? buildDedupeKey(subject) : `${item.alertType}:general`,
       promptVersion: STUDENT_ALERTS_PROMPT_VERSION,
     });

@@ -2,6 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth/guards";
 import { createSessionClient } from "@/lib/auth/server";
 import { StudentsWorkspace } from "@/features/students/components/StudentsWorkspace";
+import { SiteFooter } from "@/components/SiteFooter";
+import { LumoraMark } from "@/components/brand/LumoraMark";
 import type { RosterStudent } from "@/features/students/components/StudentRoster";
 
 // Every page here depends on the request (session cookie or locale), so it
@@ -64,7 +66,11 @@ export default async function StudentsPage({
   }
 
   return (
+    <>
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-4">
+        <LumoraMark locale={locale} href={`/${locale}`} size={32} />
+      </div>
       <StudentsWorkspace
         locale={locale}
         students={students}
@@ -89,5 +95,7 @@ export default async function StudentsPage({
         }}
       />
     </main>
+    <SiteFooter locale={locale} />
+    </>
   );
 }

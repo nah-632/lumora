@@ -17,6 +17,10 @@ mkdir -p build-test
   --bundle --format=esm --platform=node \
   --outfile=build-test/signals.mjs --log-level=warning
 
+"$ESBUILD" src/features/students/lib/alert-basis.ts \
+  --bundle --format=esm --platform=node \
+  --outfile=build-test/alert-basis.mjs --log-level=warning
+
 "$ESBUILD" src/features/students/schemas.ts \
   --bundle --format=esm --platform=node \
   --outfile=build-test/schemas.mjs --log-level=warning

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LumoraMark } from "@/components/brand/LumoraMark";
 import { getTranslations } from "next-intl/server";
 import { AuthForm } from "@/features/auth/components/AuthForm";
 import { requestPasswordResetAction } from "@/lib/auth/actions";
@@ -26,6 +27,7 @@ export default async function ResetPasswordPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-12">
+      <LumoraMark locale={locale} href={`/${locale}`} size={40} withWordmark />
       <h1 className="text-2xl font-semibold text-navy">{t("resetTitle")}</h1>
       <div className="mt-6">
         <AuthForm mode="reset" locale={locale} labels={labels} action={requestPasswordResetAction} />

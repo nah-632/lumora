@@ -13,8 +13,12 @@ export interface StudentAlert {
   suggestedAction: string | null;
   evidence: string | null;
   assessmentCount: number | null;
-  /** How many distinct signals produced this alert — answers "why did it fire?". */
+  /** What the basis count counts: assessments or submissions. Null = unknown. */
+  basisKind?: "assessments" | "submissions" | null;
+  /** How many assessment or submission records the alert rests on. */
   basisCount: number | null;
+  /** The source rows behind the count, so the claim can be re-checked. */
+  evidenceIds?: string[] | null;
   isRead: boolean;
   snoozedUntil: string | null;
   dismissed?: boolean;
@@ -30,9 +34,10 @@ interface Props {
     snooze: string;
     dismiss: string;
     dismissReason: string;
-    basedOn: string;
-    /** e.g. "Based on {count} signals" */
-    basis: string;
+    /** "Based on {count} assessments" */
+    basedOnAssessments: string;
+    /** "Based on {count} submissions" */
+    basedOnSubmissions: string;
     evidence: string;
     suggestedAction: string;
     aiNote: string;
@@ -79,14 +84,15 @@ export function AlertCard({ alert, labels, locale, onAction }: Props) {
               {labels.severity[alert.severity]}
             </span>
             <span className="text-xs text-[var(--lumora-ink-soft)]">{labels.type[alert.alertType]}</span>
-            {alert.basisCount != null && alert.basisCount > 0 && (
+            {/*
+              One line, chosen by basis_kind, so the sentence and the number can
+              never describe different things. When the kind is unknown nothing
+              is shown — an invented basis is worse than a missing one.
+            */}
+            {alert.basisCount != null && alert.basisCount > 0 && alert.basisKind && (
               <span className="text-xs text-[var(--lumora-ink-soft)] tnum">
-                {labels.basis.replace("{count}", String(alert.basisCount))}
-              </span>
-            )}
-            {alert.assessmentCount != null && alert.assessmentCount > 0 && (
-              <span className="text-xs text-[var(--lumora-ink-soft)] tnum">
-                {labels.basedOn.replace("{count}", String(alert.assessmentCount))}
+                {(alert.basisKind === "submissions" ? labels.basedOnSubmissions : labels.basedOnAssessments)
+                  .replace("{count}", String(alert.basisCount))}
               </span>
             )}
           </div>

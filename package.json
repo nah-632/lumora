@@ -10,12 +10,16 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "test": "npm run test:build && node --test tests/ai/*.test.mjs",
+    "test": "npm run test:build && node --test tests/ai/*.test.mjs tests/security/policies.test.mjs",
     "test:isolation": "node tests/security/isolation.mjs",
     "verify": "npm run type-check && npm run test",
     "lint": "next lint",
     "test:build": "sh build-tests.sh",
-    "test:canary": "node tests/security/canary.mjs"
+    "test:canary": "node tests/security/canary.mjs",
+    "test:evidence": "node tests/security/evidence.mjs",
+    "security:restore": "node tests/security/restore.mjs",
+    "test:security:open": "node tests/security/open-cases.mjs",
+    "audit:ci": "npm audit --registry=https://registry.npmjs.org --audit-level=high"
   },
   "dependencies": {
     "@supabase/ssr": "0.5.2",

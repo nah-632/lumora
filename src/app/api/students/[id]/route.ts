@@ -43,7 +43,7 @@ export async function GET(
       .select("id, action, subject, occurred_on")
       .eq("student_id", id).order("occurred_on", { ascending: false }),
     supabase.from("student_alerts")
-      .select("id, alert_type, severity, message, suggested_action, evidence, assessment_count, basis_count, is_read, snoozed_until, dismissed_at, created_at")
+      .select("id, alert_type, severity, message, suggested_action, evidence, assessment_count, basis_kind, basis_count, evidence_ids, is_read, snoozed_until, dismissed_at, created_at")
       .eq("student_id", id).order("created_at", { ascending: false }),
   ]);
 
@@ -61,7 +61,11 @@ export async function GET(
         suggestedAction: a.suggested_action,
         evidence: a.evidence,
         assessmentCount: a.assessment_count,
+        // kind and count travel together; the UI renders a sentence only when
+        // both are present, so the line can never mislabel its own number.
+        basisKind: a.basis_kind,
         basisCount: a.basis_count,
+        evidenceIds: a.evidence_ids,
         isRead: a.is_read,
         snoozedUntil: a.snoozed_until,
         dismissed: a.dismissed_at !== null,

@@ -87,6 +87,27 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
         run: npm run test:isolation
 
+      # The alert's basis sentence is a claim about rows; this proves the claim
+      # resolves to real records and that a false one is detectable.
+      - name: Verify alert evidence claims
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: npm run test:evidence
+
+      # A canary that dies mid-run can leave a weakened policy behind. This step
+      # snapshots the policy definitions before the canary and restores them
+      # after, whatever happened in between.
+      - name: Snapshot policies before canary
+        id: snap
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          MGMT: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: node tests/security/snapshot.mjs > policies-before.json
+
   canary:
     name: Canary — the isolation suite can fail
     runs-on: ubuntu-latest

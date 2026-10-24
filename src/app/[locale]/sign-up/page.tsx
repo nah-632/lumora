@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LumoraMark } from "@/components/brand/LumoraMark";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/features/auth/components/AuthForm";
@@ -31,6 +32,7 @@ export default async function SignUpPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-12">
+      <LumoraMark locale={locale} href={`/${locale}`} size={40} withWordmark />
       <h1 className="text-2xl font-semibold text-navy">{t("signUpTitle")}</h1>
       <div className="mt-6">
         <AuthForm mode="sign-up" locale={locale} labels={labels} action={signUpAction} />
@@ -40,6 +42,31 @@ export default async function SignUpPage({
         <Link href={`/${locale}/sign-in`} className="font-medium text-red underline underline-offset-2">
           {t("signInTitle")}
         </Link>
+      </p>
+
+      {/*
+        Consent is stated where consent is given, not buried in a footer the
+        visitor may never scroll to. The terms and the policy are links because
+        the visitor must be able to read what they are agreeing to.
+      */}
+      <p className="mt-6 text-xs leading-relaxed text-[var(--lumora-ink-soft)]">
+        {locale === "ar" ? (
+          <>
+            بإنشائك حسابًا فإنك توافق على{" "}
+            <Link href={`/${locale}/terms`} className="font-medium text-navy underline underline-offset-2">شروط الاستخدام</Link>
+            {" "}و{" "}
+            <Link href={`/${locale}/privacy`} className="font-medium text-navy underline underline-offset-2">سياسة الخصوصية</Link>
+            .
+          </>
+        ) : (
+          <>
+            By creating an account you agree to the{" "}
+            <Link href={`/${locale}/terms`} className="font-medium text-navy underline underline-offset-2">terms of use</Link>
+            {" "}and the{" "}
+            <Link href={`/${locale}/privacy`} className="font-medium text-navy underline underline-offset-2">privacy policy</Link>
+            .
+          </>
+        )}
       </p>
     </main>
   );
