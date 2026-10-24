@@ -1,10 +1,8 @@
 node_modules
 .next
+.env
 .env*.local
 *.log
-.superpowers
-
-*.tsbuildinfo
-tsc.log
-build.log
-dev.log
+build-test
+tsconfig.tsbuildinfo
+.DS_Store

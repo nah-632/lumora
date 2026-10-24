@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* LUMORA foundations.
+   Direction is architectural: every rule here uses logical properties so the
+   same stylesheet serves Arabic (RTL) and English (LTR). Browser surfaces —
+   selection, caret, scrollbars, focus rings — are themed from the palette
+   rather than left at defaults. */
+
+:root {
+  /* Font stacks. Arabic and Latin are distinct: an Arabic face must set Arabic,
+     and the Latin face must not be used for it. */
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Naskh Arabic", "Segoe UI", system-ui, sans-serif;
+  --font-latin: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --lumora-red: #DA291C;
+  --lumora-navy: #1D2A44;
+  --lumora-purple: #4B1E61;
+  --lumora-gold: #D4AF37;
+  --lumora-paper: #F8F9FA;
+  --lumora-ink: #16202f;
+  --lumora-ink-soft: #5a6675;
+  --lumora-line: #e3e7ec;
+  --focus: #DA291C;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--lumora-line) transparent;
+}
+
+body {
+  background: var(--lumora-paper);
+  color: var(--lumora-ink);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+
+/* Arabic sets taller and needs looser leading; Latin stays tighter. */
+[lang="ar"] body,
+[lang="ar"] {
+  font-family: var(--font-arabic), system-ui, sans-serif;
+  line-height: 1.75;
+  letter-spacing: 0; /* never letter-space Arabic */
+}
+
+[lang="en"] body,
+[lang="en"] {
+  font-family: var(--font-latin), system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--lumora-red) 22%, transparent);
+  color: var(--lumora-navy);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Tabular data must align in both directions. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Numbers and Latin terms inside Arabic text need bidi isolation. */
+.bidi-isolate {
+  unicode-bidi: isolate;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--lumora-line);
+  border-radius: 999px;
+  border: 2px solid var(--lumora-paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skeleton shimmer, used for loading states. */
+@keyframes lumora-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #eceff3 25%, #f6f8fa 37%, #eceff3 63%);
+  background-size: 400% 100%;
+  animation: lumora-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}

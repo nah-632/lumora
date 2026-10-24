@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [feat/student-tracking, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Type-check, lint, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      # npm ci installs exactly what package-lock.json pins. If the lockfile
+      # drifts from package.json this fails here rather than silently resolving
+      # different versions than the ones that were tested.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Build-time placeholders. The app must build without real secrets;
+          # anything that needs them is deferred to request time.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
+  isolation:
+    name: RLS isolation (real sessions)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The suite creates two throwaway accounts, so it needs credentials.
+      #
+      # When they are absent the job does NOT silently pass: it emits an
+      # explicit warning annotation and marks the step `skipped` via an output.
+      # A separate check (below) turns the job red the moment secrets exist but
+      # the suite still fails, so the proof cannot be quietly lost.
+      - name: Check credentials
+        id: creds
+        env:
+          TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          TEST_ANON: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          TEST_SERVICE: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$TEST_URL" ] || [ -z "$TEST_ANON" ] || [ -z "$TEST_SERVICE" ]; then
+            echo "::warning title=Isolation tests not run::SUPABASE_TEST_URL / SUPABASE_TEST_ANON_KEY / SUPABASE_TEST_SERVICE_ROLE_KEY are not set. Add them under Settings -> Secrets and variables -> Actions to enable the tenant-isolation proof."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run isolation suite
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+        run: npm run test:isolation
+
+  canary:
+    name: Canary — the isolation suite can fail
+    runs-on: ubuntu-latest
+    # A security test that cannot fail proves nothing. This job injects a real
+    # breach into the database, requires the isolation suite to catch it, and
+    # restores the schema afterwards (in a finally block).
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check credentials
+        id: creds
+        env:
+          TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          TEST_ANON: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          TEST_SERVICE: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+          MGMT: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          missing=""
+          [ -z "$TEST_URL" ] && missing="$missing SUPABASE_TEST_URL"
+          [ -z "$TEST_ANON" ] && missing="$missing SUPABASE_TEST_ANON_KEY"
+          [ -z "$TEST_SERVICE" ] && missing="$missing SUPABASE_TEST_SERVICE_ROLE_KEY"
+          [ -z "$MGMT" ] && missing="$missing SUPABASE_MANAGEMENT_TOKEN"
+          [ -z "$REF" ] && missing="$missing SUPABASE_PROJECT_REF"
+          if [ -n "$missing" ]; then
+            echo "::warning title=Canary not run::Missing secrets:$missing"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run canary
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+          SUPABASE_MANAGEMENT_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: npm run test:canary
