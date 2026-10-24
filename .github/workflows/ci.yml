@@ -112,6 +112,9 @@ jobs:
   canary:
     name: Canary — the isolation suite can fail
     runs-on: ubuntu-latest
+    # The isolation and evidence suites share one database with this job. Running
+    # them concurrently would let one job's fixture satisfy another job's breach.
+    needs: isolation
     # A security test that cannot fail proves nothing. This job injects a real
     # breach into the database, requires the isolation suite to catch it, and
     # restores the schema afterwards (in a finally block).
