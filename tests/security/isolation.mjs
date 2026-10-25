@@ -200,6 +200,10 @@ async function main() {
     student_id: sB.id, teacher_id: B.id, alert_type: "grade_drop", severity: "urgent", message: "B alert", dedupe_key: "k1",
     assessment_count: 4, basis_kind: "assessments", basis_count: 4, evidence_ids: [],
   });
+  const alertA = await mk("student_alerts", {
+    student_id: sA.id, teacher_id: A.id, alert_type: "grade_drop", severity: "attention", message: "A alert", dedupe_key: "ka",
+    assessment_count: 2, basis_kind: "assessments", basis_count: 2, evidence_ids: [],
+  });
   const interventionB = await mk("student_interventions", {
     student_id: sB.id, teacher_id: B.id, action: "B remedial session",
   });
@@ -399,6 +403,99 @@ async function main() {
     const { body } = await svcJson(`/rest/v1/teacher_alert_settings?select=drop_threshold_pct&teacher_id=eq.${B.id}`);
     check("A cannot change B's alert settings (value unchanged)", body[0]?.drop_threshold_pct === 25,
       `http ${patch.status}, stored ${body[0]?.drop_threshold_pct}`);
+  }
+
+  // ---------------------------------------------------------------------
+  // GRANTS AS THEIR OWN LAYER
+  //
+  // RLS is only consulted if the privilege exists. Measured in ADR-012: with no
+  // INSERT grant on student_grades, a permissive policy wrote nothing and the
+  // suite reported a pass — the policy was never reached. A test that only ever
+  // sees 42501 cannot tell a correct policy from a missing grant, and a
+  // permissive policy on an unprivileged table is dead code that looks like
+  // enforcement.
+  //
+  // These assertions therefore ask the database about the grants themselves,
+  // separately from the RLS assertions above, as constitution section 8
+  // requires. `anon` and `authenticated` are named explicitly: the answer is a
+  // property of those roles, not of the caller asking.
+  //
+  // The canary proves each one can fail — its SELECT breach makes B's roster
+  // readable, its grade-INSERT breach adds the missing grant, and its UPDATE
+  // breach writes a column the client must not hold.
+  // ---------------------------------------------------------------------
+  console.log("\n— grants: the layer that decides whether RLS is reached at all —\n");
+
+  const hasGrant = async (role, table, priv, column = null) => {
+    const expr = column
+      ? `has_column_privilege('${role}','public.${table}','${column}','${priv}')`
+      : `has_table_privilege('${role}','public.${table}','${priv}')`;
+    const { body } = await asUserJson(A.token, `rpc/has_privilege_probe`, {
+      method: "POST",
+      body: JSON.stringify({ p_role: role, p_table: table, p_privilege: priv, p_column: column }),
+    });
+    void expr;
+    return body === true;
+  };
+
+  // 17. anon holds nothing on the student tables. RLS denies anon anyway; the
+  //     grant does not exist, which is what stops a request before a policy is read.
+  check("anon holds NO access to the student tables (grant layer)",
+    (await hasGrant("anon", "students", "SELECT")) === false &&
+      (await hasGrant("anon", "student_alerts", "SELECT")) === false &&
+      (await hasGrant("anon", "student_alerts", "INSERT")) === false,
+    "has_table_privilege('anon', …)");
+
+  // 18. a teacher may not write an alert at all, and may not rewrite the columns
+  //     the policy does not mention. basis_count is rendered as "Based on N
+  //     assessments": if a client could write it, the sentence would be a lie
+  //     that the database would store on the client's behalf.
+  check("authenticated holds NO INSERT on student_alerts (grant layer)",
+    (await hasGrant("authenticated", "student_alerts", "INSERT")) === false,
+    "has_table_privilege('authenticated','student_alerts','INSERT')");
+
+  {
+    const flags = await hasGrant("authenticated", "student_alerts", "UPDATE", "is_read");
+    const message = await hasGrant("authenticated", "student_alerts", "UPDATE", "message");
+    const basis = await hasGrant("authenticated", "student_alerts", "UPDATE", "basis_count");
+    const kind = await hasGrant("authenticated", "student_alerts", "UPDATE", "basis_kind");
+    // The column the flag path genuinely depends on. If the positive half of this
+    // assertion is wrong, the suite is asserting a grant the application does not
+    // need — and the first CI run showed exactly that: is_read reported false
+    // while the flag path works, because the alert-settings RPC (not a direct
+    // grant) is what writes the flags. snoozed_until is the column the API
+    // actually patches, so it is the one asserted present.
+    const snoozed = await hasGrant("authenticated", "student_alerts", "UPDATE", "snoozed_until");
+    check("authenticated may snooze an alert but NOT rewrite its message or basis (grant layer)",
+      snoozed === true && message === false && basis === false && kind === false,
+      `snoozed_until=${snoozed} message=${message} basis=${basis} basis_kind=${kind} is_read=${flags}`);
+  }
+
+  // 19. the alert text itself must be immutable to a teacher, not merely
+  //     invisible to the other teacher.
+  {
+    const patch = await asUser(A.token, `student_alerts?id=eq.${alertA.id}`, {
+      method: "PATCH", headers: { prefer: "return=representation" },
+      body: JSON.stringify({ basis_count: 999, basis_kind: "submissions", message: "mine now" }),
+    });
+    const after = await svcRow("student_alerts", alertA.id, "message,basis_count,basis_kind");
+    check("A cannot rewrite the basis of their OWN alert (row unchanged)",
+      after?.basis_count === 2 && after?.basis_kind === "assessments" && after?.message === "A alert",
+      `http ${patch.status}, stored ${after?.basis_count}/${after?.basis_kind} "${after?.message}"`);
+  }
+
+  // 20. ownership is not chosen by the client. The BEFORE INSERT trigger forces
+  //     teacher_id to the caller, so a forged owner is discarded before the policy
+  //     sees it — and the policy then refuses the row on its own terms.
+  {
+    const forged = await asUser(A.token, "students", {
+      method: "POST", headers: { prefer: "return=representation" },
+      body: JSON.stringify({ teacher_id: B.id, name: `TriggerForge-${stamp}`, grade_level: "G9" }),
+    });
+    const { body: found } = await svcJson(`/rest/v1/students?select=id,teacher_id&name=eq.TriggerForge-${stamp}`);
+    const onVictim = found.filter((r) => r.teacher_id === B.id).length;
+    check("a forged owner never reaches B's account (trigger + policy)", onVictim === 0,
+      `http ${forged.status}, rows on victim ${onVictim}`);
   }
 
   console.log("\n— positive controls: the suite could pass by everything being broken —\n");

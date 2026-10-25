@@ -61,9 +61,21 @@ export async function PATCH(
     .eq("id", id)
     .select("id");
 
-  // Zero rows means RLS filtered it out: the alert is not the caller's.
-  if (error || !data || data.length === 0) {
-    return NextResponse.json({ ok: false, code: "failed" }, { status: 404 });
+  // A permission error is not a 404. They mean different things and belong to
+  // different owners: 404 is "this alert is not yours" (the caller's mistake),
+  // 403 is "the column grant is missing" (ours). Collapsing them hid a grant
+  // defect behind an innocent-looking status until CI's own probe caught it.
+  if (error) {
+    const denied = (error as { code?: string }).code === "42501";
+    return NextResponse.json(
+      { ok: false, code: denied ? "forbidden" : "failed" },
+      { status: denied ? 403 : 500 },
+    );
+  }
+
+  // Zero rows with no error means RLS filtered it out: not the caller's alert.
+  if (!data || data.length === 0) {
+    return NextResponse.json({ ok: false, code: "not_found" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true, data: { id } });

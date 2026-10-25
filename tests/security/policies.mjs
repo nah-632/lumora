@@ -50,7 +50,61 @@ drop policy if exists canary_del_alerts on public.student_alerts;
 revoke delete on public.student_alerts from authenticated;
 `;
 
-export const RESTORE_ALL = POLICY_SQL;
+/**
+ * Grants the canary temporarily adds so that a policy-layer breach can be
+ * reached at all. RLS is only consulted if the privilege exists; on a table
+ * where `authenticated` holds no INSERT, a permissive policy is dead code and
+ * a breach proves nothing. Each one is exactly the privilege the migrations
+ * withhold (see 0010: column-level grants on student_alerts/students), so the
+ * restore below returns the database to the migration's own state.
+ *
+ * `authenticated` is the role PostgREST assumes for a signed-in teacher's
+ * request, and the isolation suite always runs with a teacher's own token.
+ */
+const CANARY_GRANTS = `
+grant insert on public.student_grades to authenticated;
+`;
+
+/** Revokes exactly what CANARY_GRANTS adds. Idempotent. */
+const REVOKE_CANARY_GRANTS = `
+revoke insert on public.student_grades from authenticated;
+`;
+
+/**
+ * Column-level grants the canary temporarily adds to prove that a teacher cannot
+ * rewrite an alert's evidence. Each revoke below returns the database to 0013's
+ * state: UPDATE on the four flag columns, and nothing else.
+ */
+const REVOKE_CANARY_COLUMN_GRANTS = `
+revoke insert on public.student_alerts from authenticated;
+revoke update (message, basis_count, basis_kind, evidence_ids) on public.student_alerts from authenticated;
+grant update (is_read, snoozed_until, dismissed_at, dismissed_reason)
+  on public.student_alerts to authenticated;
+`;
+
+/**
+ * Recreates what a breach may have dropped outside the policy layer: the owner
+ * trigger (owning a row is a 0013 trigger, so dropping it is a real breach) and
+ * the exact alert grant set 0013 defines.
+ */
+const RESTORE_OWNERSHIP = `
+drop trigger if exists students_set_owner on public.students;
+create trigger students_set_owner before insert on public.students
+  for each row execute function public.set_owner_teacher();
+revoke insert, update on public.student_alerts from authenticated;
+grant update (is_read, snoozed_until, dismissed_at, dismissed_reason)
+  on public.student_alerts to authenticated;
+`;
+
+/** Recreates what a breach may have dropped outside the policy layer. */
+const RESTORE_TRIGGERS = `
+drop trigger if exists students_set_owner on public.students;
+create trigger students_set_owner before insert on public.students
+  for each row execute function public.set_owner_teacher();
+`;
+
+export const RESTORE_ALL =
+  POLICY_SQL + REVOKE_CANARY_GRANTS + REVOKE_CANARY_COLUMN_GRANTS + RESTORE_TRIGGERS + RESTORE_OWNERSHIP;
 
 export const BREACHES = [
   {
@@ -120,10 +174,17 @@ export const BREACHES = [
     // service role while the policy is permissive DID write the row (201); under
     // the real policy the same request is refused (403).
     needsGrant: { table: "student_grades", privilege: "INSERT" },
+    // Two layers defend this case and a canary must breach the one that is
+    // actually reached. `authenticated` holds no INSERT on student_grades, so
+    // PostgREST refuses with 42501 before RLS is ever consulted — a permissive
+    // policy alone would prove nothing (that is exactly the failure this job
+    // reported). The grant is added first, then the policy, and REVOKE_CANARY_GRANTS
+    // removes it in the restore.
     name: "grades INSERT: A can plant a mark on B's student",
     expects: "A cannot attach a grade to B's student (refused, marker",
     marker: "X-",
     breach: `
+      grant insert on public.student_grades to authenticated;
       drop policy if exists student_grades_insert_own on public.student_grades;
       create policy student_grades_insert_own on public.student_grades
         for insert to authenticated with check (true);`,
@@ -145,5 +206,30 @@ export const BREACHES = [
       drop policy if exists canary_del_alerts on public.student_alerts;
       create policy canary_del_alerts on public.student_alerts
         for delete to authenticated using (true);`,
+  },
+
+  {
+    // The assertion this breaks lives in the GRANT section of the suite, not the
+    // RLS section: 0013 removed INSERT on student_alerts, so the only way to
+    // prove the suite notices a reopened write path is to reopen it.
+    name: "alerts INSERT grant: a teacher can write their own alert",
+    expects: "authenticated holds NO INSERT on student_alerts (grant layer)",
+    breach: `grant insert on public.student_alerts to authenticated;`,
+  },
+  {
+    // basis_count is what the UI renders as "Based on N assessments". This is the
+    // exact defect the canary surfaced first: the policy checked the owner and
+    // nothing else, so a client could rewrite the number behind the sentence.
+    name: "alerts UPDATE column: a teacher can rewrite the basis of their own alert",
+    expects: "authenticated may update alert flags but NOT message or basis (grant layer)",
+    breach: `grant update (message, basis_count, basis_kind, evidence_ids) on public.student_alerts to authenticated;`,
+  },
+  {
+    // The trigger assigns ownership; without it a client-chosen teacher_id is
+    // what the policy would have to catch. Dropping the trigger must make the
+    // forged-owner assertion fail, or the trigger is decoration.
+    name: "students owner trigger removed: a client can choose the owner",
+    expects: "a forged owner never reaches B's account (trigger + policy)",
+    breach: `drop trigger if exists students_set_owner on public.students;`,
   },
 ];
