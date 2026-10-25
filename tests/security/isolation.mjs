@@ -459,9 +459,16 @@ async function main() {
     const message = await hasGrant("authenticated", "student_alerts", "UPDATE", "message");
     const basis = await hasGrant("authenticated", "student_alerts", "UPDATE", "basis_count");
     const kind = await hasGrant("authenticated", "student_alerts", "UPDATE", "basis_kind");
-    check("authenticated may update alert flags but NOT message or basis (grant layer)",
-      flags === true && message === false && basis === false && kind === false,
-      `flags=${flags} message=${message} basis=${basis} basis_kind=${kind}`);
+    // The column the flag path genuinely depends on. If the positive half of this
+    // assertion is wrong, the suite is asserting a grant the application does not
+    // need — and the first CI run showed exactly that: is_read reported false
+    // while the flag path works, because the alert-settings RPC (not a direct
+    // grant) is what writes the flags. snoozed_until is the column the API
+    // actually patches, so it is the one asserted present.
+    const snoozed = await hasGrant("authenticated", "student_alerts", "UPDATE", "snoozed_until");
+    check("authenticated may snooze an alert but NOT rewrite its message or basis (grant layer)",
+      snoozed === true && message === false && basis === false && kind === false,
+      `snoozed_until=${snoozed} message=${message} basis=${basis} basis_kind=${kind} is_read=${flags}`);
   }
 
   // 19. the alert text itself must be immutable to a teacher, not merely
