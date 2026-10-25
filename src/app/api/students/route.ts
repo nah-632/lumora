@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { studentCreateSchema } from "@/features/students/schemas";
-import { accessTokenFromRequest, readSupabaseEnv, restRequest } from "@/server/supabase";
+import { readSupabaseEnv, requireUser, restRequest } from "@/server/supabase";
 
 /**
  * Creating a student runs with the caller's own access token, so teacher_id is
  * enforced by the database. The server never supplies teacher_id from user input.
+ *
+ * The caller is resolved from the real session (@supabase/ssr + getUser), so an
+ * anonymous request is refused here instead of failing later inside the fetch.
  */
 export async function POST(req: Request) {
-  const token = accessTokenFromRequest(req);
-  if (!token) {
+  const session = await requireUser();
+  if (!session) {
     return NextResponse.json({ ok: false, code: "unauthorized" }, { status: 401 });
   }
 
@@ -29,7 +32,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, code: "failed" }, { status: 500 });
   }
 
-  const res = await restRequest(env, token, "students", {
+  const res = await restRequest(env, session.token, "students", {
     method: "POST",
     headers: { prefer: "return=representation" },
     // teacher_id is deliberately omitted: it defaults to auth.uid() in the

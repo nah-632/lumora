@@ -2,10 +2,13 @@
  * The LUMORA mark used in headers, footers and on the public pages.
  *
  * The source artwork is a single square lockup (mark + wordmark + tagline) on a
- * white ground. Two crops are used: the full lockup (webp, for small surfaces
- * where the wordmark belongs) and the mark alone, cut out with a measured ink
- * box and a rounded-corner alpha so it sits on the paper ground without a white
- * rectangle around it.
+ * white ground. Two renditions are used: the full lockup (webp, for small
+ * surfaces where the wordmark belongs) and the mark alone.
+ *
+ * The mark is cropped from the 2048px original at its measured ink box
+ * (x 786-1262, y 374-863 — bulb and palm only, caption lines excluded) onto a
+ * square white ground with 8% breathing room. Derived by cropping; the artwork
+ * is never redrawn.
  *
  * A plain <img> with explicit dimensions, not next/image: these are small static
  * files and the optimizer is deliberately unused (ADR-010 — remotePatterns is not
@@ -33,7 +36,7 @@ export function LumoraMark({ locale, withWordmark = false, size = 32, href }: Pr
     />
   ) : (
     <img
-      src="/brand/lumora-mark-generated@96.png"
+      src="/brand/lumora-mark@96.png"
       alt=""
       aria-hidden="true"
       width={size}

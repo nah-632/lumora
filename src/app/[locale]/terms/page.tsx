@@ -36,11 +36,10 @@ export default async function TermsPage({
       </header>
 
       <h1 className="mt-8 text-3xl font-semibold text-navy">{copy.title}</h1>
-      <p
-        className="mt-4 rounded-md border border-[var(--lumora-line)] bg-white px-4 py-3 text-xs leading-relaxed text-[var(--lumora-ink-soft)]"
-        role="note"
-      >
-        {locale === "ar" ? LEGAL_REVIEW.noteAr : LEGAL_REVIEW.note}
+      <p className="mt-3 text-xs text-[var(--lumora-ink-soft)] tnum">
+        {locale === "ar"
+          ? `الإصدار ${LEGAL_REVIEW.version} · سارية من ${LEGAL_REVIEW.effectiveDate}`
+          : `Version ${LEGAL_REVIEW.version} · Effective ${LEGAL_REVIEW.effectiveDate}`}
       </p>
 
       <ol className="mt-8 space-y-8">

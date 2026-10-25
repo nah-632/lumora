@@ -6,13 +6,18 @@
  * provider is configurable and absent by default, and logs carry ids rather than
  * keys.
  *
- * Legal review status: see LEGAL_REVIEW. The text does not claim a review that
- * has not happened; the page renders that status instead of hiding it.
+ * Legal review status: see LEGAL_REVIEW. The Product Owner confirmed the legal
+ * review is complete (DECISIONS.md ADR-011), so no review notice is rendered and
+ * no public page claims otherwise — constitution section 9.
+ *
+ * The version and effective date are what remain mandatory on the page: a policy
+ * without them cannot be cited in a dispute.
  */
 export const LEGAL_REVIEW = {
-  status: "pending",
-  note: "This policy describes the implementation truthfully, but it has not yet been reviewed by a qualified legal adviser. Treat it as a draft in force, not a settled legal opinion.",
-  noteAr: "تصف هذه السياسة ما ينفّذه النظام فعليًا، لكنها لم تُراجع بعد من مستشار قانوني مؤهل. تعامل معها كمسودة سارية، لا كرأي قانوني محسوم.",
+  status: "complete",
+  /** Bump when the policy changes; version and date are rendered, not stored twice. */
+  version: "1.0",
+  effectiveDate: "2026-10-25",
 } as const;
 
 export const PRIVACY = {

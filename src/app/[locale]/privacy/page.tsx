@@ -37,13 +37,13 @@ export default async function PrivacyPage({
 
       <h1 className="mt-8 text-3xl font-semibold text-navy">{copy.title}</h1>
 
-      {/* Legal-review status is shown, not hidden. A policy that reads as final
-          while an open review exists would be a claim the product cannot make. */}
-      <p
-        className="mt-4 rounded-md border border-[var(--lumora-line)] bg-white px-4 py-3 text-xs leading-relaxed text-[var(--lumora-ink-soft)]"
-        role="note"
-      >
-        {locale === "ar" ? LEGAL_REVIEW.noteAr : LEGAL_REVIEW.note}
+      {/* The review is complete (ADR-011), so the page states its version and the
+          date it took effect — the two facts a policy needs to be citable — and
+          makes no claim that it is still under review. */}
+      <p className="mt-3 text-xs text-[var(--lumora-ink-soft)] tnum">
+        {locale === "ar"
+          ? `الإصدار ${LEGAL_REVIEW.version} · سارية من ${LEGAL_REVIEW.effectiveDate}`
+          : `Version ${LEGAL_REVIEW.version} · Effective ${LEGAL_REVIEW.effectiveDate}`}
       </p>
 
       <ol className="mt-8 space-y-8">
