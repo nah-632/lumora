@@ -45,6 +45,53 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
 
+  # A route can be dead while build, type-check, lint and the unit tests all
+  # pass. /sign-in returned 500 for exactly that reason: it is force-dynamic, so
+  # `next build` never rendered it, and next-intl was installed but never wired
+  # through its plugin (ADR-014). This job exercises the routes over HTTP in a
+  # real browser against a production build, which is the only check that could
+  # have failed.
+  smoke:
+    name: Public pages smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Runners only. The browsers are never installed on a developer machine —
+      # this project's own sandbox cannot run them at all.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # playwright.config.mjs starts the app itself (`next build && next start`)
+      # unless SMOKE_BASE_URL is set, so this step owns no server of its own.
+      - name: Run smoke suite
+        run: npm run test:smoke
+        env:
+          # Same build-time placeholders as the quality job: the app must build
+          # without real secrets.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SMOKE_PORT: "3000"
+
+      # Traces and failure screenshots are the whole point of running this in CI;
+      # without them a red job says "a page was broken" and nothing more.
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
   isolation:
     name: RLS isolation (real sessions)
     runs-on: ubuntu-latest
