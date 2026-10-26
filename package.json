@@ -17,6 +17,7 @@
     "test:build": "sh build-tests.sh",
     "test:canary": "node tests/security/canary.mjs",
     "test:evidence": "node tests/security/evidence.mjs",
+    "test:smoke": "playwright test --config=playwright.config.mjs",
     "security:restore": "node tests/security/restore.mjs",
     "test:security:open": "node tests/security/open-cases.mjs",
     "audit:ci": "npm audit --registry=https://registry.npmjs.org --audit-level=high"
@@ -31,6 +32,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@types/node": "20.19.43",
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
