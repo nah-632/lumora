@@ -20,19 +20,24 @@ function pickLocale(req: NextRequest): string {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Send un-prefixed application paths to the visitor's locale.
-  const isApp =
-    !pathname.startsWith("/api") &&
-    !pathname.startsWith("/_next") &&
-    !pathname.startsWith("/brand") &&
-    pathname !== "/favicon.ico" &&
-    !/\.(?:png|jpe?g|svg|webp|ico|txt|xml|json)$/i.test(pathname);
+  // `/` is the public landing page and roots the site in both languages; it must
+  // not be redirected, or a visitor deep-linked to "/" loses the page entirely.
+  if (pathname === "/") return NextResponse.next();
 
-  if (isApp) {
+  // Send un-prefixed application paths to the visitor's locale. The root is
+  // already handled above; infrastructure paths must never be rewritten.
+  const isInfrastructure =
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/brand") ||
+    pathname === "/favicon.ico" ||
+    /\.(?:png|jpe?g|svg|webp|ico|txt|xml|json)$/i.test(pathname);
+
+  if (!isInfrastructure) {
     const seg = pathname.split("/")[1];
     if (!(LOCALES as readonly string[]).includes(seg)) {
       const url = req.nextUrl.clone();
-      url.pathname = `/${pickLocale(req)}${pathname === "/" ? "/students" : pathname}`;
+      url.pathname = `/${pickLocale(req)}${pathname}`;
       return NextResponse.redirect(url);
     }
   }
@@ -71,6 +76,11 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
+/**
+ * `brand/` and `images/` are static asset folders under public/. Without them in
+ * this exclusion the locale redirect rewrites /brand/hero-bulb.webp to
+ * /ar/brand/... and every image 404s.
+ */
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|brand/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|brand/|images/).*)"],
 };

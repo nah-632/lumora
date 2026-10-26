@@ -217,3 +217,89 @@ is rated moderate by the publisher. The table follows the publisher.
 6. Roll back = revert the branch; nothing in `supabase/` changes for this upgrade.
 
 `npm audit` is now part of every phase report, run against the public registry.
+
+## ADR-014 — The document shell belongs to the locale, and reveals must be able to undo themselves
+
+Both issues below were found by rendering the site, not by reading it. Neither was
+visible in type-check, lint or unit tests, which is the point worth recording: the
+design layer had no verification that could fail.
+
+### Part 1 — `lang` and `dir` were fixed to Arabic for every language
+
+**Measured.** `GET /en` returned `<!DOCTYPE html><html lang="ar" dir="rtl">` with
+English copy inside it.
+
+**Why it matters.** `dir` on the document is not a display preference; it is the
+input to every logical property in the codebase. With `rtl` on an English page,
+`margin-inline-start`, `padding-inline`, `inset-inline-end`, `text-align: start`
+and the `inline-start` nav underline all resolve to the wrong edge, mirroring is
+inverted, and assistive technology announces English text as Arabic. The
+constitution (§4) requires `dir` and `lang` on the root element *per locale*.
+
+**Root cause.** `src/app/layout.tsx` is above the `[locale]` segment, so it cannot
+read the locale param. Hard-coding one direction there is the only thing it *can*
+do, which is why it was hard-coded to the default language.
+
+**Decision.** The document shell moves to `src/app/[locale]/layout.tsx`, which
+owns `<html lang dir>` and `<body>`. The root layout becomes a pass-through that
+returns `children`. Fonts move to `src/design/fonts.ts` because Next.js generates
+route types from every export of a layout module and rejects a font object as an
+unrecognised export.
+
+**Why not the alternatives.** Reading `headers()` in the root layout would work
+but forces every page dynamic, and the constitution requires marketing and legal
+pages to stay static. Setting `dir` from a client effect would render one frame in
+the wrong direction and leave the server HTML wrong for crawlers and for anything
+that reads the document before hydration.
+
+**Verified.** `/ar`, `/en`, `/ar/privacy`, `/en/privacy`, `/ar/about`, `/en/about`
+and `/ar/terms` all return 200 with the correct `lang`/`dir`. Each locale is still
+prerendered through `generateStaticParams`, so this did not cost static output.
+
+### Part 2 — Scroll reveal could hide the page permanently
+
+**Measured.** After load, `document.documentElement` carried `js-reveal`, all ten
+`[data-reveal]` elements reported `opacity: 0`, and none carried `is-revealed`.
+Everything below the hero was invisible.
+
+**Root cause.** An inline script added `.js-reveal` to `<html>` *before paint*, and
+CSS used that class to set every revealable element to `opacity: 0`. Undoing it
+depended on `MotionRoot`'s `useEffect` and a working `IntersectionObserver`. The
+hidden state was applied unconditionally; the un-hiding was conditional. Any
+failure of the second — a blocked script, a slow or failed hydration, an observer
+that is present but never reports — left a blank page with no way back. The
+previous comment on that script claimed the page "degrades to a complete static
+document", which was true only if the script did not run at all; it said nothing
+about the case where it ran and the effect did not.
+
+**Decision.** Invert the dependency so the default is visible:
+1. No pre-paint script. Nothing is hidden before paint.
+2. `MotionRoot` hides an element only when it runs, and only if that element is
+   genuinely below the fold (`top > innerHeight * 0.9`). Content already on screen
+   is never touched.
+3. If `IntersectionObserver` is missing or reduced motion is requested, nothing is
+   hidden at all.
+4. A one-shot 2s fail-safe reveals everything still pending, covering an observer
+   that never reports (background tabs, print, some embedded webviews).
+
+CSS follows the same rule: `[data-reveal]` has no hidden state; only
+`[data-reveal-pending]`, which the effect applies, does.
+
+**Verified.** After the fix all ten elements report `opacity: 1`, nine were marked
+pending and all nine revealed, and the full page renders from top to bottom in
+both locales.
+
+**Trade-off.** An element that is below the fold and scrolled past within 2s of
+load will already have revealed by the fail-safe rather than animating on entry.
+Correctness of content beats the animation; the window only affects very fast
+scrolling immediately after load.
+
+### Unresolved, recorded so it is not mistaken for a regression
+
+`/ar/sign-in` and `/en/sign-in` return **500**: `Couldn't find next-intl config
+file`. `i18n.ts` exists but `next.config.mjs` never calls
+`createNextIntlPlugin()`, so `next-intl` was never actually wired. This predates
+this branch and is unrelated to the layout move — the landing page does not use
+`next-intl`'s `useTranslations`. It sits in the authentication surface, which this
+branch is not allowed to touch, so it is reported rather than fixed. The fix is
+one plugin call in `next.config.mjs` plus a smoke test of both sign-in routes.
