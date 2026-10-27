@@ -92,6 +92,203 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  # Proves the baseline can build a database from nothing, with no cloud project
+  # involved. Everything here runs against `supabase start` on the runner, so this
+  # job touches no secret, no test project and no legacy project — it cannot.
+  #
+  # 0010-0015 are in supabase/migrations/archive/ on this branch so the reset
+  # replays 0000_baseline.sql alone. If the assertions pass, the baseline really
+  # does reconstruct the schema those files used to add.
+  baseline:
+    name: Baseline rebuild (0000 only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Archiving the numbered migrations in the repo breaks
+      # tests/security/policies.test.mjs, which compares the canary's restore SQL
+      # against the migration files on disk. So the repository keeps them where
+      # they are and this job sets them aside at run time instead: the reset then
+      # replays 0000_baseline.sql alone, which is the question being asked.
+      - name: Replay the baseline alone
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/deferred
+          for f in supabase/migrations/*.sql; do
+            case "$f" in
+              *0000_baseline.sql) ;;
+              *) mv "$f" /tmp/deferred/ ;;
+            esac
+          done
+          echo "queued for this run:"; ls supabase/migrations/
+
+      - name: Start local Supabase (Docker, no cloud)
+        run: supabase start
+
+      # Replays every file in supabase/migrations in filename order, which by now
+      # is 0000_baseline.sql and nothing else.
+      - name: Rebuild from the baseline alone
+        run: supabase db reset
+
+      - name: Assert the schema the baseline claims to build
+        env:
+          DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          q() { psql "$DB" -tAc "$1"; }
+
+          tables=$(q "select count(*) from information_schema.tables
+                       where table_schema='public' and table_type='BASE TABLE'")
+          [ "$tables" = "20" ] || fail "expected 20 public tables, found $tables"
+
+          [ "$(q "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                   where n.nspname='public' and p.proname='has_privilege_probe'")" = "1" ] \
+            || fail "has_privilege_probe() missing"
+
+          [ "$(q "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                   where n.nspname='public' and p.proname='has_role'")" = "1" ] \
+            || fail "has_role() missing"
+
+          [ "$(q "select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid
+                   join pg_namespace n on n.oid=c.relnamespace
+                   where n.nspname='auth' and c.relname='users'
+                     and t.tgname='on_auth_user_created' and not t.tgisinternal")" = "1" ] \
+            || fail "on_auth_user_created trigger missing from auth.users"
+
+          for t in students student_grades student_submissions student_alerts \
+                   student_interventions teacher_alert_settings; do
+            [ "$(q "select has_table_privilege('anon','public.$t','SELECT')
+                     or has_table_privilege('anon','public.$t','INSERT')
+                     or has_table_privilege('anon','public.$t','UPDATE')
+                     or has_table_privilege('anon','public.$t','DELETE')")" = "f" ] \
+              || fail "anon still holds a privilege on $t"
+          done
+
+          # 0015: a session that names another teacher as owner must be refused with
+          # 42501. The before-insert trigger fires ahead of the foreign key, so the
+          # error is the trigger's, not a referential one.
+          out=$(psql "$DB" -v ON_ERROR_STOP=0 2>&1 <<'SQL'
+          set role authenticated;
+          set request.jwt.claims = '{"sub":"00000000-0000-0000-0000-00000000aaaa","role":"authenticated"}';
+          insert into public.students (teacher_id, name, grade_level)
+          values ('00000000-0000-0000-0000-00000000bbbb','spoof','G7');
+          SQL
+          )
+          case "$out" in
+            *42501*|*"refusing to create a row owned by another teacher"*)
+              echo "0015 enforced: $out" ;;
+            *) fail "a spoofed teacher_id was NOT refused with 42501. Output: $out" ;;
+          esac
+
+          echo "baseline rebuild verified: 20 tables, probe, has_role, auth trigger, 0015, anon closed."
+
+      # Fidelity, not just a green suite: dump every grant from the rebuilt database
+      # and compare it with the set captured from the test project. Names only, no
+      # data. The suite proves the behaviour it exercises; this proves the whole
+      # privilege surface, including privileges nothing tests.
+      - name: Privileges match the test project
+        env:
+          DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -euo pipefail
+          psql "$DB" -tA -f supabase/tests/grants.sql | sed '/^$/d' | sort > /tmp/rebuilt-grants.txt
+          if ! diff -u supabase/tests/expected-grants.txt /tmp/rebuilt-grants.txt > /tmp/grants.diff; then
+            echo "::error::the rebuilt database does not match the test project's privileges"
+            head -100 /tmp/grants.diff
+            exit 1
+          fi
+          echo "grant sets identical ($(wc -l < /tmp/rebuilt-grants.txt) grants)"
+
+      # Permanent guards, so the next function does not arrive with the same
+      # defaults the last five did. Both read the rebuilt database, so neither
+      # needs a secret or the cloud project.
+      - name: No anon EXECUTE beyond the allowlist
+        env:
+          DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -euo pipefail
+          psql "$DB" -tA -c "
+            select distinct p.proname
+              from pg_proc p
+              cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) x
+              left join pg_roles g on g.oid = x.grantee
+             where p.pronamespace = 'public'::regnamespace and p.prokind = 'f'
+               and g.rolname = 'anon'
+               and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+             order by 1" | sed '/^$/d' > /tmp/anon-exec.txt
+          grep -v '^#' supabase/tests/anon-execute-allowlist.txt | sed '/^$/d' | sort > /tmp/anon-allowed.txt
+          if ! diff -u /tmp/anon-allowed.txt /tmp/anon-exec.txt > /tmp/anon.diff; then
+            echo "::error::anon can EXECUTE a function that is not on the allowlist (see supabase/tests/anon-execute-allowlist.txt)"
+            cat /tmp/anon.diff
+            exit 1
+          fi
+          echo "anon EXECUTE matches the allowlist"
+
+      - name: Every SECURITY DEFINER function pins search_path
+        env:
+          DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -euo pipefail
+          psql "$DB" -tA -c "
+            select p.proname
+              from pg_proc p
+             where p.pronamespace = 'public'::regnamespace and p.prokind = 'f'
+               and p.prosecdef
+               and not exists (
+                 select 1 from pg_options_to_table(p.proconfig)
+                  where option_name = 'search_path')
+             order by 1" | sed '/^$/d' > /tmp/unpinned.txt
+          if [ -s /tmp/unpinned.txt ]; then
+            echo "::error::SECURITY DEFINER functions without a pinned search_path (a caller can shadow what they resolve against):"
+            cat /tmp/unpinned.txt
+            exit 1
+          fi
+          echo "all SECURITY DEFINER functions pin search_path"
+
+      # The legacy project taught this one: there, anon holds CREATE on public
+      # through the schema's PUBLIC entry ("=UC"), and four SECURITY DEFINER
+      # functions resolve through `public` — so a caller could plant an object the
+      # function would then use. Revoking from the roles does nothing while PUBLIC
+      # still grants it, which is why this checks the effective privilege and not
+      # the explicit ACL entry.
+      - name: Neither API role may CREATE in public
+        env:
+          DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -euo pipefail
+          for role in anon authenticated; do
+            can=$(psql "$DB" -tAc "select has_schema_privilege('$role','public','CREATE')")
+            if [ "$can" = "t" ]; then
+              echo "::error::$role can CREATE in schema public — a caller could plant an object that a SECURITY DEFINER function resolves against"
+              psql "$DB" -tAc "select nspacl::text from pg_namespace where nspname='public'"
+              exit 1
+            fi
+          done
+          echo "neither anon nor authenticated can CREATE in public"
+
+      # The suite is the real consumer of this schema, so run it against the local
+      # instance if it can run unmodified. Local URL and keys are generated by
+      # `supabase start` inside this job; no secret is read.
+      - name: Isolation suite against the rebuilt database
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          export NEXT_PUBLIC_SUPABASE_URL="${API_URL:-http://127.0.0.1:54321}"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          npm ci
+          npm run test:isolation
+
   isolation:
     name: RLS isolation (real sessions)
     runs-on: ubuntu-latest
