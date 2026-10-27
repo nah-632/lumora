@@ -23,8 +23,10 @@
     "audit:ci": "npm audit --registry=https://registry.npmjs.org --audit-level=high"
   },
   "dependencies": {
+    "@ai-sdk/openai": "4.0.104",
     "@supabase/ssr": "0.5.2",
     "@supabase/supabase-js": "2.47.10",
+    "ai": "7.0.155",
     "next": "14.2.35",
     "next-intl": "3.26.3",
     "react": "18.3.1",
