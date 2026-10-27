@@ -828,6 +828,15 @@ create policy user_roles_select_own on public.user_roles as PERMISSIVE for selec
 -- only adds grants leaves the defaults switched on and grants MORE than the
 -- real database does. service_role is left exactly as it is.
 -- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- Privileges, stated from scratch
+--
+-- Every object is stripped of anon and authenticated first, then re-granted
+-- from its own ACL. Grants alone are not enough: a fresh database hands new
+-- tables in public to those roles by default privilege, so a baseline that
+-- only adds grants leaves the defaults switched on and grants MORE than the
+-- real database does. service_role is left exactly as it is.
+-- ---------------------------------------------------------------------------
 revoke all on table public."audit_logs" from anon, authenticated;
 revoke all on sequence public."audit_logs_id_seq" from anon, authenticated;
 revoke all on table public."conversations" from anon, authenticated;
@@ -979,21 +988,21 @@ grant insert ("period_start", "runs_limit", "runs_used", "tokens_limit", "tokens
 grant select ("period_start", "runs_limit", "runs_used", "tokens_limit", "tokens_used", "updated_at", "user_id") on table public."usage_quotas" to authenticated;
 grant update ("period_start", "runs_limit", "runs_used", "tokens_limit", "tokens_used", "updated_at", "user_id") on table public."usage_quotas" to authenticated;
 grant select ("granted_at", "granted_by", "id", "role", "user_id") on table public."user_roles" to authenticated;
-revoke all on function public."admin_read_student"(p_student_id uuid, p_reason text) from public, anon, authenticated;
-revoke all on function public."alert_basis_is_consistent"(p_alert uuid) from public, anon, authenticated;
-revoke all on function public."handle_new_user"() from public, anon, authenticated;
-revoke all on function public."has_privilege_probe"(p_role text, p_table text, p_privilege text, p_column text) from public, anon, authenticated;
-revoke all on function public."has_role"(p_user_id uuid, p_role app_role) from public, anon, authenticated;
-revoke all on function public."is_admin"(p_user_id uuid) from public, anon, authenticated;
-revoke all on function public."is_staff"(p_user_id uuid) from public, anon, authenticated;
-revoke all on function public."purge_deleted_students"() from public, anon, authenticated;
-revoke all on function public."purge_expired_students_job"() from public, anon, authenticated;
-revoke all on function public."restore_student"(p_student_id uuid) from public, anon, authenticated;
-revoke all on function public."set_owner_teacher"() from public, anon, authenticated;
-revoke all on function public."soft_delete_student"(p_student_id uuid) from public, anon, authenticated;
-revoke all on function public."students_is_active"(p_id uuid, p_teacher uuid) from public, anon, authenticated;
-revoke all on function public."tg_set_updated_at"() from public, anon, authenticated;
-revoke all on function public."touch_updated_at"() from public, anon, authenticated;
+revoke all on function public."admin_read_student"(p_student_id uuid, p_reason text) from anon, authenticated;
+revoke all on function public."alert_basis_is_consistent"(p_alert uuid) from anon, authenticated;
+revoke all on function public."handle_new_user"() from anon, authenticated;
+revoke all on function public."has_privilege_probe"(p_role text, p_table text, p_privilege text, p_column text) from anon, authenticated;
+revoke all on function public."has_role"(p_user_id uuid, p_role app_role) from anon, authenticated;
+revoke all on function public."is_admin"(p_user_id uuid) from anon, authenticated;
+revoke all on function public."is_staff"(p_user_id uuid) from anon, authenticated;
+revoke all on function public."purge_deleted_students"() from anon, authenticated;
+revoke all on function public."purge_expired_students_job"() from anon, authenticated;
+revoke all on function public."restore_student"(p_student_id uuid) from anon, authenticated;
+revoke all on function public."set_owner_teacher"() from anon, authenticated;
+revoke all on function public."soft_delete_student"(p_student_id uuid) from anon, authenticated;
+revoke all on function public."students_is_active"(p_id uuid, p_teacher uuid) from anon, authenticated;
+revoke all on function public."tg_set_updated_at"() from anon, authenticated;
+revoke all on function public."touch_updated_at"() from anon, authenticated;
 grant execute on function public."admin_read_student"(p_student_id uuid, p_reason text) to anon;
 grant execute on function public."admin_read_student"(p_student_id uuid, p_reason text) to authenticated;
 grant execute on function public."admin_read_student"(p_student_id uuid, p_reason text) to service_role;
@@ -1172,5 +1181,8 @@ grant execute on function public."touch_updated_at"() to service_role;
 grant execute on function public."translate"(citext, citext, text) to anon;
 grant execute on function public."translate"(citext, citext, text) to authenticated;
 grant execute on function public."translate"(citext, citext, text) to service_role;
+-- PUBLIC keeps EXECUTE only where the test project still grants it.
+revoke all on function public."alert_basis_is_consistent"(p_alert uuid) from public;
+revoke all on function public."has_privilege_probe"(p_role text, p_table text, p_privilege text, p_column text) from public;
 
 commit;
