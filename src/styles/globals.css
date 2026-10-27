@@ -13,12 +13,15 @@
      and the Latin face must not be used for it. */
   /* next/font (layout.tsx) injects --font-arabic and --font-display on <html>.
      The fallbacks keep Arabic legible before the face swaps. */
-  --font-arabic: "IBM Plex Sans Arabic", "Noto Naskh Arabic", "Segoe UI", system-ui, sans-serif;
+  /* Per-glyph fallback: the Arabic file first, the Latin file only for what it
+     does not contain. Both are self-hosted (see src/design/fonts.ts). */
+  --font-arabic: var(--font-text-ar), var(--font-text-lat), "Noto Naskh Arabic", system-ui, sans-serif;
   /* Latin runs (the LUMORA name, English UI) in the same Plex skeleton as the
      Arabic body, so a mixed line keeps one stroke weight. */
-  --font-latin: "IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-latin: var(--font-text-lat), var(--font-text-ar), system-ui, sans-serif;
   /* El Messiri sets both Arabic and Latin, so headlines need no second family. */
-  --font-display: "El Messiri", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-display: var(--font-display-ar), var(--font-display-lat), "Noto Naskh Arabic",
+    system-ui, sans-serif;
 
   --lumora-red: #DA291C;
   --lumora-navy: #1D2A44;
