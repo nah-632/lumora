@@ -788,9 +788,8 @@ create policy student_submissions_delete_own on public.student_submissions as PE
 create policy student_submissions_insert_own on public.student_submissions as PERMISSIVE for insert to authenticated with check (((teacher_id = ( SELECT auth.uid() AS uid)) AND students_is_active(student_id, teacher_id)));
 create policy student_submissions_select_own on public.student_submissions as PERMISSIVE for select to authenticated using (((teacher_id = ( SELECT auth.uid() AS uid)) AND students_is_active(student_id, teacher_id)));
 create policy student_submissions_update_own on public.student_submissions as PERMISSIVE for update to authenticated using (((teacher_id = ( SELECT auth.uid() AS uid)) AND students_is_active(student_id, teacher_id))) with check ((teacher_id = ( SELECT auth.uid() AS uid)));
-create policy canary_del_students on public.students as PERMISSIVE for delete to authenticated using (true);
 create policy students_insert_own on public.students as PERMISSIVE for insert to authenticated with check ((teacher_id = ( SELECT auth.uid() AS uid)));
-create policy students_select_own on public.students as PERMISSIVE for select to authenticated using (true);
+create policy students_select_own on public.students as PERMISSIVE for select to authenticated using (((teacher_id = ( SELECT auth.uid() AS uid)) AND (deleted_at IS NULL)));
 create policy students_update_own on public.students as PERMISSIVE for update to authenticated using (((teacher_id = ( SELECT auth.uid() AS uid)) AND (deleted_at IS NULL))) with check ((teacher_id = ( SELECT auth.uid() AS uid)));
 create policy teacher_alert_settings_insert_own on public.teacher_alert_settings as PERMISSIVE for insert to authenticated with check ((teacher_id = ( SELECT auth.uid() AS uid)));
 create policy teacher_alert_settings_select_own on public.teacher_alert_settings as PERMISSIVE for select to authenticated using ((teacher_id = ( SELECT auth.uid() AS uid)));
@@ -801,7 +800,6 @@ create policy prefs_update_self on public.teacher_preferences as PERMISSIVE for 
 create policy quotas_select_own on public.usage_quotas as PERMISSIVE for select to authenticated using (((user_id = auth.uid()) OR is_admin(auth.uid())));
 create policy user_roles_select_own on public.user_roles as PERMISSIVE for select to authenticated using (((user_id = auth.uid()) OR is_staff(auth.uid())));
 
--- ---------------------------------------------------------------------------
 -- Privileges, stated from scratch
 --
 -- Every object is stripped of anon and authenticated first, then re-granted
