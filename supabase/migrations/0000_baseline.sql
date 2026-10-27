@@ -38,6 +38,14 @@
 --   truth. It is for one thing only: building an empty database that migrations
 --   0010 onward can then be applied to.
 --
+-- FUNCTION GRANTS, AND WHY 0016 EXISTS
+--
+-- The export first reproduced a drift rather than fixing it: anon and PUBLIC held
+-- EXECUTE on five SECURITY DEFINER functions that 0010 had already ordered
+-- revoked. That is recorded in 0016_function_grants_align.sql, which applies the
+-- missing revokes; this file now reflects the corrected state, so a rebuild matches
+-- the database the tests actually run against.
+--
 -- NUMBERING
 --
 -- `0000` sorts before every other migration, so a fresh `supabase db reset` runs
@@ -835,6 +843,15 @@ create policy user_roles_select_own on public.user_roles as PERMISSIVE for selec
 -- only adds grants leaves the defaults switched on and grants MORE than the
 -- real database does. service_role is left exactly as it is.
 -- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- Privileges, stated from scratch
+--
+-- Every object is stripped of anon and authenticated first, then re-granted
+-- from its own ACL. Grants alone are not enough: a fresh database hands new
+-- tables in public to those roles by default privilege, so a baseline that
+-- only adds grants leaves the defaults switched on and grants MORE than the
+-- real database does. service_role is left exactly as it is.
+-- ---------------------------------------------------------------------------
 revoke all on table public."audit_logs" from anon, authenticated;
 revoke all on sequence public."audit_logs_id_seq" from anon, authenticated;
 revoke all on table public."conversations" from anon, authenticated;
@@ -1001,7 +1018,6 @@ revoke all on function public."soft_delete_student"(p_student_id uuid) from anon
 revoke all on function public."students_is_active"(p_id uuid, p_teacher uuid) from anon, authenticated;
 revoke all on function public."tg_set_updated_at"() from anon, authenticated;
 revoke all on function public."touch_updated_at"() from anon, authenticated;
-grant execute on function public."admin_read_student"(p_student_id uuid, p_reason text) to anon;
 grant execute on function public."admin_read_student"(p_student_id uuid, p_reason text) to authenticated;
 grant execute on function public."admin_read_student"(p_student_id uuid, p_reason text) to service_role;
 grant execute on function public."alert_basis_is_consistent"(p_alert uuid) to authenticated;
@@ -1089,11 +1105,7 @@ grant execute on function public."is_admin"(p_user_id uuid) to service_role;
 grant execute on function public."is_staff"(p_user_id uuid) to anon;
 grant execute on function public."is_staff"(p_user_id uuid) to authenticated;
 grant execute on function public."is_staff"(p_user_id uuid) to service_role;
-grant execute on function public."purge_deleted_students"() to anon;
-grant execute on function public."purge_deleted_students"() to authenticated;
 grant execute on function public."purge_deleted_students"() to service_role;
-grant execute on function public."purge_expired_students_job"() to anon;
-grant execute on function public."purge_expired_students_job"() to authenticated;
 grant execute on function public."purge_expired_students_job"() to service_role;
 grant execute on function public."regexp_match"(citext, citext) to anon;
 grant execute on function public."regexp_match"(citext, citext) to authenticated;
@@ -1128,13 +1140,11 @@ grant execute on function public."regexp_split_to_table"(citext, citext, text) t
 grant execute on function public."replace"(citext, citext, citext) to anon;
 grant execute on function public."replace"(citext, citext, citext) to authenticated;
 grant execute on function public."replace"(citext, citext, citext) to service_role;
-grant execute on function public."restore_student"(p_student_id uuid) to anon;
 grant execute on function public."restore_student"(p_student_id uuid) to authenticated;
 grant execute on function public."restore_student"(p_student_id uuid) to service_role;
 grant execute on function public."set_owner_teacher"() to anon;
 grant execute on function public."set_owner_teacher"() to authenticated;
 grant execute on function public."set_owner_teacher"() to service_role;
-grant execute on function public."soft_delete_student"(p_student_id uuid) to anon;
 grant execute on function public."soft_delete_student"(p_student_id uuid) to authenticated;
 grant execute on function public."soft_delete_student"(p_student_id uuid) to service_role;
 grant execute on function public."split_part"(citext, citext, integer) to anon;
@@ -1143,7 +1153,6 @@ grant execute on function public."split_part"(citext, citext, integer) to servic
 grant execute on function public."strpos"(citext, citext) to anon;
 grant execute on function public."strpos"(citext, citext) to authenticated;
 grant execute on function public."strpos"(citext, citext) to service_role;
-grant execute on function public."students_is_active"(p_id uuid, p_teacher uuid) to anon;
 grant execute on function public."students_is_active"(p_id uuid, p_teacher uuid) to authenticated;
 grant execute on function public."students_is_active"(p_id uuid, p_teacher uuid) to service_role;
 grant execute on function public."texticlike"(citext, text) to anon;
@@ -1180,7 +1189,13 @@ grant execute on function public."translate"(citext, citext, text) to anon;
 grant execute on function public."translate"(citext, citext, text) to authenticated;
 grant execute on function public."translate"(citext, citext, text) to service_role;
 -- PUBLIC keeps EXECUTE only where the test project still grants it.
+revoke all on function public."admin_read_student"(p_student_id uuid, p_reason text) from public;
 revoke all on function public."alert_basis_is_consistent"(p_alert uuid) from public;
 revoke all on function public."has_privilege_probe"(p_role text, p_table text, p_privilege text, p_column text) from public;
+revoke all on function public."purge_deleted_students"() from public;
+revoke all on function public."purge_expired_students_job"() from public;
+revoke all on function public."restore_student"(p_student_id uuid) from public;
+revoke all on function public."soft_delete_student"(p_student_id uuid) from public;
+revoke all on function public."students_is_active"(p_id uuid, p_teacher uuid) from public;
 
 commit;

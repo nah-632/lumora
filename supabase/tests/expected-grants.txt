@@ -1,5 +1,3 @@
-function|admin_read_student(p_student_id uuid, p_reason text)|PUBLIC|execute|-
-function|admin_read_student(p_student_id uuid, p_reason text)|anon|execute|-
 function|admin_read_student(p_student_id uuid, p_reason text)|authenticated|execute|-
 function|admin_read_student(p_student_id uuid, p_reason text)|service_role|execute|-
 function|alert_basis_is_consistent(p_alert uuid)|authenticated|execute|-
@@ -114,13 +112,7 @@ function|is_staff(p_user_id uuid)|PUBLIC|execute|-
 function|is_staff(p_user_id uuid)|anon|execute|-
 function|is_staff(p_user_id uuid)|authenticated|execute|-
 function|is_staff(p_user_id uuid)|service_role|execute|-
-function|purge_deleted_students()|PUBLIC|execute|-
-function|purge_deleted_students()|anon|execute|-
-function|purge_deleted_students()|authenticated|execute|-
 function|purge_deleted_students()|service_role|execute|-
-function|purge_expired_students_job()|PUBLIC|execute|-
-function|purge_expired_students_job()|anon|execute|-
-function|purge_expired_students_job()|authenticated|execute|-
 function|purge_expired_students_job()|service_role|execute|-
 function|regexp_match(citext, citext)|PUBLIC|execute|-
 function|regexp_match(citext, citext)|anon|execute|-
@@ -166,16 +158,12 @@ function|replace(citext, citext, citext)|PUBLIC|execute|-
 function|replace(citext, citext, citext)|anon|execute|-
 function|replace(citext, citext, citext)|authenticated|execute|-
 function|replace(citext, citext, citext)|service_role|execute|-
-function|restore_student(p_student_id uuid)|PUBLIC|execute|-
-function|restore_student(p_student_id uuid)|anon|execute|-
 function|restore_student(p_student_id uuid)|authenticated|execute|-
 function|restore_student(p_student_id uuid)|service_role|execute|-
 function|set_owner_teacher()|PUBLIC|execute|-
 function|set_owner_teacher()|anon|execute|-
 function|set_owner_teacher()|authenticated|execute|-
 function|set_owner_teacher()|service_role|execute|-
-function|soft_delete_student(p_student_id uuid)|PUBLIC|execute|-
-function|soft_delete_student(p_student_id uuid)|anon|execute|-
 function|soft_delete_student(p_student_id uuid)|authenticated|execute|-
 function|soft_delete_student(p_student_id uuid)|service_role|execute|-
 function|split_part(citext, citext, integer)|PUBLIC|execute|-
@@ -186,8 +174,6 @@ function|strpos(citext, citext)|PUBLIC|execute|-
 function|strpos(citext, citext)|anon|execute|-
 function|strpos(citext, citext)|authenticated|execute|-
 function|strpos(citext, citext)|service_role|execute|-
-function|students_is_active(p_id uuid, p_teacher uuid)|PUBLIC|execute|-
-function|students_is_active(p_id uuid, p_teacher uuid)|anon|execute|-
 function|students_is_active(p_id uuid, p_teacher uuid)|authenticated|execute|-
 function|students_is_active(p_id uuid, p_teacher uuid)|service_role|execute|-
 function|texticlike(citext, citext)|PUBLIC|execute|-
