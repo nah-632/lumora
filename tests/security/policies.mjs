@@ -150,6 +150,64 @@ export const RESTORE_ALL =
   RESTORE_TRIGGERS +
   RESTORE_OWNERSHIP;
 
+/**
+ * Static schema guards: protections that no policy breach can demonstrate.
+ *
+ * `student_grades` refuses a cross-tenant insert at the foreign key
+ * (student_grades_student_teacher_fkey on (student_id, teacher_id)), which runs
+ * before RLS is consulted. That is why the "grades INSERT" breach above is
+ * declared unprovable rather than dropped: opening every policy leaves the
+ * behaviour unchanged and the assertion still passes, but the actual protection
+ * is real and must not vanish quietly. This guard is what notices if it does.
+ *
+ * Runs only where a Management API token is present, which is the canary job —
+ * the static runs (`npm test`, type-check) import this module with no
+ * credentials and skip it, so nothing reaches for the network there.
+ */
+const SCHEMA_GUARDS = [
+  {
+    what: "the composite FK that blocks cross-tenant grade inserts",
+    sql: `select count(*)::int as present
+            from pg_constraint
+           where conname = 'student_grades_student_teacher_fkey'
+             and conrelid = 'public.student_grades'::regclass`,
+  },
+];
+
+export async function assertSchemaGuards() {
+  const token = process.env.SUPABASE_MANAGEMENT_TOKEN;
+  const ref = process.env.SUPABASE_PROJECT_REF;
+  if (!token || !ref) return;
+
+  for (const guard of SCHEMA_GUARDS) {
+    const res = await fetch(
+      `https://api.supabase.com/v1/projects/${ref}/database/query`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ query: guard.sql }),
+        signal: AbortSignal.timeout(30_000),
+      },
+    );
+    if (!res.ok) {
+      throw new Error(`SCHEMA GUARD could not be checked (${res.status}): ${guard.what}`);
+    }
+    const rows = await res.json();
+    const present = Array.isArray(rows) ? rows[0]?.present : undefined;
+    if (present !== 1) {
+      throw new Error(
+        `SCHEMA GUARD FAILED: ${guard.what} is missing — ` +
+          `student_grades cross-tenant inserts are no longer blocked before RLS.`,
+      );
+    }
+  }
+}
+
+// Evaluated when this module is imported with the canary's credentials, so a
+// missing FK stops the run instead of silently passing a suite that can no
+// longer test that path.
+await assertSchemaGuards();
+
 export const BREACHES = [
   {
     name: "students SELECT: A can read B's roster",
@@ -223,6 +281,18 @@ export const BREACHES = [
     // removes the grant again in the restore. No needsGrant gate: it used to skip
     // this case in exactly the state the migrations create, which is why the
     // breach never fired.
+    //
+    // NOT DEMONSTRABLE, measured: even with the grant and both policies open, the
+    // insert is refused by the composite foreign key
+    // student_grades_student_teacher_fkey (student_id, teacher_id) -> students(id,
+    // teacher_id), because A's teacher_id matches no parent row for B's student.
+    // PostgREST maps the violation to HTTP 409, the marker never lands, and the
+    // assertion passes for a reason that has nothing to do with the security
+    // layer. No policy or grant can make this assertion fail, so it is declared
+    // unprovable rather than deleted — see assertSchemaGuard below, which keeps
+    // the actual protection (that FK) from disappearing unnoticed.
+    expectNoChange:
+      "Cross-tenant grade insert is blocked by the composite FK student_grades_student_teacher_fkey (HTTP 409) before RLS is consulted, so a permissive policy cannot make this assertion fail.",
     name: "grades INSERT: A can plant a mark on B's student",
     expects: "A cannot attach a grade to B's student (refused, marker",
     marker: "X-",

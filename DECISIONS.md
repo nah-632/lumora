@@ -130,6 +130,8 @@ required checks on `main` before this branch becomes `main`.
 ## ADR-012 — RLS policy enforcement on the INSERT path (measured, unresolved)
 **Date:** 2026-10-25 · **Status:** OPEN — needs owner decision
 
+**Measured 2026-10-27:** a cross-tenant `student_grades` insert is refused by the composite foreign key `student_grades_student_teacher_fkey` on `(student_id, teacher_id)` with HTTP 409, before RLS is consulted — so that assertion in the isolation suite cannot be made to fail by any policy breach and is declared unprovable, with `assertSchemaGuards()` in `tests/security/policies.mjs` failing the canary if the FK ever disappears.
+
 While hardening the isolation suite we measured behaviour that the migrations
 assume but do not guarantee:
 
