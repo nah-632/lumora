@@ -103,8 +103,52 @@ create trigger students_set_owner before insert on public.students
   for each row execute function public.set_owner_teacher();
 `;
 
+/**
+ * The ownership function itself, mirrored from supabase/migrations/0015.
+ *
+ * A breach that only drops the trigger proves nothing: the trigger is also what
+ * fills teacher_id when the client omits it, so dropping it turns the positive
+ * control "A CAN create their own student" red on NOT NULL and the canary then
+ * sees a failure that is not the one it is testing for. The forged-owner breach
+ * therefore replaces this body instead of removing the trigger, which means the
+ * restore has to put the body back — the trigger definition alone is not enough.
+ *
+ * Kept in step with 0015 by hand, like POLICY_SQL is kept in step with 0010/0011.
+ */
+const OWNER_FUNCTION_SQL = `
+create or replace function public.set_owner_teacher()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  caller uuid := (select auth.uid());
+begin
+  if caller is null then
+    return new;
+  end if;
+  if new.teacher_id is null then
+    new.teacher_id := caller;
+    return new;
+  end if;
+  if new.teacher_id <> caller then
+    raise exception
+      'refusing to create a row owned by another teacher'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+`;
+
 export const RESTORE_ALL =
-  POLICY_SQL + REVOKE_CANARY_GRANTS + REVOKE_CANARY_COLUMN_GRANTS + RESTORE_TRIGGERS + RESTORE_OWNERSHIP;
+  POLICY_SQL +
+  REVOKE_CANARY_GRANTS +
+  REVOKE_CANARY_COLUMN_GRANTS +
+  OWNER_FUNCTION_SQL +
+  RESTORE_TRIGGERS +
+  RESTORE_OWNERSHIP;
 
 export const BREACHES = [
   {
@@ -146,17 +190,22 @@ export const BREACHES = [
         for insert to authenticated with check (true);`,
   },
   {
-    // If the grant exists, the row is destroyed and the suite must say so. If it
-    // does not, the breach never fired and this case would prove nothing — see
-    // open-cases.mjs.
-    needsGrant: { table: "students", privilege: "DELETE" },
+    // The breach grants the privilege itself, so it is reachable on every database
+    // rather than only where a leftover grant happens to exist. The gate it used
+    // to carry (needsGrant) skipped the case whenever `authenticated` held no
+    // DELETE, which is the migrations' intended state — so the case never fired
+    // and proved nothing. POLICY_SQL's `revoke delete ... from authenticated`
+    // removes the grant again during the restore.
     name: "students DELETE: A can delete B's student",
     expects: "A cannot delete B's student (row survives)",
     breach: `
       grant delete on public.students to authenticated;
       drop policy if exists canary_del_students on public.students;
       create policy canary_del_students on public.students
-        for delete to authenticated using (true);`,
+        for delete to authenticated using (true);
+      drop policy if exists students_select_own on public.students;
+      create policy students_select_own on public.students
+        for select to authenticated using (true);`,
   },
   {
     name: "grades SELECT: A can read B's marks",
@@ -167,19 +216,13 @@ export const BREACHES = [
         for select to authenticated using (true);`,
   },
   {
-    // Refused for the right reason: authenticated holds no INSERT privilege on
-    // student_grades, so the request dies before RLS is consulted. Taking the
-    // privilege away is therefore not a breach. The equivalent breach was
-    // measured in a separate recorded run (ADR-012): servicing the insert with the
-    // service role while the policy is permissive DID write the row (201); under
-    // the real policy the same request is refused (403).
-    needsGrant: { table: "student_grades", privilege: "INSERT" },
-    // Two layers defend this case and a canary must breach the one that is
+    // Two layers defend this case and the canary must breach the one that is
     // actually reached. `authenticated` holds no INSERT on student_grades, so
-    // PostgREST refuses with 42501 before RLS is ever consulted — a permissive
-    // policy alone would prove nothing (that is exactly the failure this job
-    // reported). The grant is added first, then the policy, and REVOKE_CANARY_GRANTS
-    // removes it in the restore.
+    // PostgREST refuses with 42501 before RLS is consulted. The breach therefore
+    // grants the privilege first and then opens the policy; REVOKE_CANARY_GRANTS
+    // removes the grant again in the restore. No needsGrant gate: it used to skip
+    // this case in exactly the state the migrations create, which is why the
+    // breach never fired.
     name: "grades INSERT: A can plant a mark on B's student",
     expects: "A cannot attach a grade to B's student (refused, marker",
     marker: "X-",
@@ -187,7 +230,10 @@ export const BREACHES = [
       grant insert on public.student_grades to authenticated;
       drop policy if exists student_grades_insert_own on public.student_grades;
       create policy student_grades_insert_own on public.student_grades
-        for insert to authenticated with check (true);`,
+        for insert to authenticated with check (true);
+      drop policy if exists student_grades_select_own on public.student_grades;
+      create policy student_grades_select_own on public.student_grades
+        for select to authenticated using (true);`,
   },
   {
     name: "alerts SELECT: A can read B's evidence trail",
@@ -198,14 +244,18 @@ export const BREACHES = [
         for select to authenticated using (true);`,
   },
   {
-    needsGrant: { table: "student_alerts", privilege: "DELETE" },
+    // Same reasoning as students DELETE: the breach grants what it needs, and
+    // POLICY_SQL's `revoke delete ... from authenticated` takes it back.
     name: "alerts DELETE: A can destroy B's alert",
     expects: "A cannot delete B's alert (row survives)",
     breach: `
       grant delete on public.student_alerts to authenticated;
       drop policy if exists canary_del_alerts on public.student_alerts;
       create policy canary_del_alerts on public.student_alerts
-        for delete to authenticated using (true);`,
+        for delete to authenticated using (true);
+      drop policy if exists student_alerts_select_own on public.student_alerts;
+      create policy student_alerts_select_own on public.student_alerts
+        for select to authenticated using (true);`,
   },
 
   {
@@ -221,15 +271,62 @@ export const BREACHES = [
     // exact defect the canary surfaced first: the policy checked the owner and
     // nothing else, so a client could rewrite the number behind the sentence.
     name: "alerts UPDATE column: a teacher can rewrite the basis of their own alert",
-    expects: "authenticated may update alert flags but NOT message or basis (grant layer)",
+    // Was "authenticated may update alert flags but NOT message or basis (grant
+    // layer)". The assertion was renamed in isolation.mjs when is_read turned out
+    // not to be the column the flag path writes; the expectation here was never
+    // updated, so the canary reported "went red, but not on ..." even when the
+    // suite failed on exactly the right check.
+    expects: "authenticated may snooze an alert but NOT rewrite its message or basis (grant layer)",
     breach: `grant update (message, basis_count, basis_kind, evidence_ids) on public.student_alerts to authenticated;`,
   },
   {
-    // The trigger assigns ownership; without it a client-chosen teacher_id is
-    // what the policy would have to catch. Dropping the trigger must make the
-    // forged-owner assertion fail, or the trigger is decoration.
-    name: "students owner trigger removed: a client can choose the owner",
+    // The trigger assigns ownership and refuses a forged one; the assertion this
+    // must break lives at isolation.mjs "a forged owner never reaches B's
+    // account (trigger + policy)" and it counts rows on the victim, not a status
+    // code. Two layers defend that case, so the breach has to open both, and the
+    // choice of payload matters:
+    //
+    //   - Dropping the trigger outright (the previous payload) also removed the
+    //     only thing that fills teacher_id when a client omits it, so the
+    //     positive control "A CAN create their own student" failed on NOT NULL
+    //     and the suite went red on the wrong assertion. That proves the trigger
+    //     exists, not that a forged owner is refused.
+    //   - Replacing the body below keeps the assign-when-omitted path intact and
+    //     removes only the refusal, which is the real failure mode: ownership is
+    //     taken from the client without complaint.
+    //
+    // A permissive INSERT policy is included because the policy is the second
+    // guard: with the refusal gone the policy would still reject teacher_id <> 
+    // auth.uid() and the forged row would never appear, which would prove
+    // nothing about the trigger. OWNER_FUNCTION_SQL in RESTORE_ALL puts the real
+    // body back, and POLICY_SQL restores students_insert_own.
+    // A permissive INSERT policy is not enough on its own. The suite posts with
+    // `Prefer: return=representation`, so the inserted row is also checked against
+    // the SELECT policy; a row owned by B is not visible to A, PostgREST answers
+    // 42501 and the whole insert is rolled back — no row, nothing to detect.
+    // Measured: with only the INSERT policy opened, the forged insert returned 403
+    // and 0 rows existed. Opening SELECT as well is what makes the forgery real.
+    //
+    // OWNER_FUNCTION_SQL in RESTORE_ALL puts the real body back, and POLICY_SQL
+    // restores both students_insert_own and students_select_own.
+    name: "students owner trigger neutered: a client can choose the owner",
     expects: "a forged owner never reaches B's account (trigger + policy)",
-    breach: `drop trigger if exists students_set_owner on public.students;`,
+    breach: `
+      create or replace function public.set_owner_teacher()
+      returns trigger language plpgsql security invoker set search_path = ''
+      as $breach$
+      begin
+        if new.teacher_id is null then
+          new.teacher_id := (select auth.uid());
+        end if;
+        return new;
+      end;
+      $breach$;
+      drop policy if exists students_insert_own on public.students;
+      create policy students_insert_own on public.students
+        for insert to authenticated with check (true);
+      drop policy if exists students_select_own on public.students;
+      create policy students_select_own on public.students
+        for select to authenticated using (true);`,
   },
 ];
