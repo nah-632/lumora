@@ -245,7 +245,6 @@ sequence|audit_logs_id_seq|service_role|update|-
 sequence|audit_logs_id_seq|service_role|usage|-
 table|audit_logs|anon|delete|-
 table|audit_logs|anon|insert|-
-table|audit_logs|anon|maintain|-
 table|audit_logs|anon|references|-
 table|audit_logs|anon|select|-
 table|audit_logs|anon|trigger|-
@@ -263,7 +262,6 @@ table|audit_logs|authenticated|insert|entity
 table|audit_logs|authenticated|insert|entity_id
 table|audit_logs|authenticated|insert|id
 table|audit_logs|authenticated|insert|ip_address
-table|audit_logs|authenticated|maintain|-
 table|audit_logs|authenticated|references|-
 table|audit_logs|authenticated|select|-
 table|audit_logs|authenticated|select|action
@@ -281,7 +279,6 @@ table|audit_logs|authenticated|truncate|-
 table|audit_logs|authenticated|update|-
 table|audit_logs|service_role|delete|-
 table|audit_logs|service_role|insert|-
-table|audit_logs|service_role|maintain|-
 table|audit_logs|service_role|references|-
 table|audit_logs|service_role|select|-
 table|audit_logs|service_role|trigger|-
@@ -289,7 +286,6 @@ table|audit_logs|service_role|truncate|-
 table|audit_logs|service_role|update|-
 table|conversations|anon|delete|-
 table|conversations|anon|insert|-
-table|conversations|anon|maintain|-
 table|conversations|anon|references|-
 table|conversations|anon|select|-
 table|conversations|anon|trigger|-
@@ -304,7 +300,6 @@ table|conversations|authenticated|insert|subject
 table|conversations|authenticated|insert|title
 table|conversations|authenticated|insert|updated_at
 table|conversations|authenticated|insert|user_id
-table|conversations|authenticated|maintain|-
 table|conversations|authenticated|references|-
 table|conversations|authenticated|select|-
 table|conversations|authenticated|select|archived_at
@@ -326,7 +321,6 @@ table|conversations|authenticated|update|updated_at
 table|conversations|authenticated|update|user_id
 table|conversations|service_role|delete|-
 table|conversations|service_role|insert|-
-table|conversations|service_role|maintain|-
 table|conversations|service_role|references|-
 table|conversations|service_role|select|-
 table|conversations|service_role|trigger|-
@@ -334,7 +328,6 @@ table|conversations|service_role|truncate|-
 table|conversations|service_role|update|-
 table|curriculum_chunks|anon|delete|-
 table|curriculum_chunks|anon|insert|-
-table|curriculum_chunks|anon|maintain|-
 table|curriculum_chunks|anon|references|-
 table|curriculum_chunks|anon|select|-
 table|curriculum_chunks|anon|trigger|-
@@ -348,7 +341,6 @@ table|curriculum_chunks|authenticated|insert|created_at
 table|curriculum_chunks|authenticated|insert|document_id
 table|curriculum_chunks|authenticated|insert|id
 table|curriculum_chunks|authenticated|insert|token_count
-table|curriculum_chunks|authenticated|maintain|-
 table|curriculum_chunks|authenticated|references|-
 table|curriculum_chunks|authenticated|select|-
 table|curriculum_chunks|authenticated|select|chunk_index
@@ -368,7 +360,6 @@ table|curriculum_chunks|authenticated|update|id
 table|curriculum_chunks|authenticated|update|token_count
 table|curriculum_chunks|service_role|delete|-
 table|curriculum_chunks|service_role|insert|-
-table|curriculum_chunks|service_role|maintain|-
 table|curriculum_chunks|service_role|references|-
 table|curriculum_chunks|service_role|select|-
 table|curriculum_chunks|service_role|trigger|-
@@ -376,7 +367,6 @@ table|curriculum_chunks|service_role|truncate|-
 table|curriculum_chunks|service_role|update|-
 table|curriculum_documents|anon|delete|-
 table|curriculum_documents|anon|insert|-
-table|curriculum_documents|anon|maintain|-
 table|curriculum_documents|anon|references|-
 table|curriculum_documents|anon|select|-
 table|curriculum_documents|anon|trigger|-
@@ -391,7 +381,6 @@ table|curriculum_documents|authenticated|insert|page_to
 table|curriculum_documents|authenticated|insert|source_id
 table|curriculum_documents|authenticated|insert|title
 table|curriculum_documents|authenticated|insert|unit
-table|curriculum_documents|authenticated|maintain|-
 table|curriculum_documents|authenticated|references|-
 table|curriculum_documents|authenticated|select|-
 table|curriculum_documents|authenticated|select|created_at
@@ -413,7 +402,6 @@ table|curriculum_documents|authenticated|update|title
 table|curriculum_documents|authenticated|update|unit
 table|curriculum_documents|service_role|delete|-
 table|curriculum_documents|service_role|insert|-
-table|curriculum_documents|service_role|maintain|-
 table|curriculum_documents|service_role|references|-
 table|curriculum_documents|service_role|select|-
 table|curriculum_documents|service_role|trigger|-
@@ -421,7 +409,6 @@ table|curriculum_documents|service_role|truncate|-
 table|curriculum_documents|service_role|update|-
 table|curriculum_sources|anon|delete|-
 table|curriculum_sources|anon|insert|-
-table|curriculum_sources|anon|maintain|-
 table|curriculum_sources|anon|references|-
 table|curriculum_sources|anon|select|-
 table|curriculum_sources|anon|trigger|-
@@ -440,7 +427,6 @@ table|curriculum_sources|authenticated|insert|title
 table|curriculum_sources|authenticated|insert|updated_at
 table|curriculum_sources|authenticated|insert|verified_at
 table|curriculum_sources|authenticated|insert|verified_by
-table|curriculum_sources|authenticated|maintain|-
 table|curriculum_sources|authenticated|references|-
 table|curriculum_sources|authenticated|select|-
 table|curriculum_sources|authenticated|select|created_at
@@ -470,7 +456,6 @@ table|curriculum_sources|authenticated|update|verified_at
 table|curriculum_sources|authenticated|update|verified_by
 table|curriculum_sources|service_role|delete|-
 table|curriculum_sources|service_role|insert|-
-table|curriculum_sources|service_role|maintain|-
 table|curriculum_sources|service_role|references|-
 table|curriculum_sources|service_role|select|-
 table|curriculum_sources|service_role|trigger|-
@@ -478,7 +463,6 @@ table|curriculum_sources|service_role|truncate|-
 table|curriculum_sources|service_role|update|-
 table|generation_runs|anon|delete|-
 table|generation_runs|anon|insert|-
-table|generation_runs|anon|maintain|-
 table|generation_runs|anon|references|-
 table|generation_runs|anon|select|-
 table|generation_runs|anon|trigger|-
@@ -501,7 +485,6 @@ table|generation_runs|authenticated|insert|provider
 table|generation_runs|authenticated|insert|status
 table|generation_runs|authenticated|insert|task_type
 table|generation_runs|authenticated|insert|user_id
-table|generation_runs|authenticated|maintain|-
 table|generation_runs|authenticated|references|-
 table|generation_runs|authenticated|select|-
 table|generation_runs|authenticated|select|completed_at
@@ -539,7 +522,6 @@ table|generation_runs|authenticated|update|task_type
 table|generation_runs|authenticated|update|user_id
 table|generation_runs|service_role|delete|-
 table|generation_runs|service_role|insert|-
-table|generation_runs|service_role|maintain|-
 table|generation_runs|service_role|references|-
 table|generation_runs|service_role|select|-
 table|generation_runs|service_role|trigger|-
@@ -547,7 +529,6 @@ table|generation_runs|service_role|truncate|-
 table|generation_runs|service_role|update|-
 table|messages|anon|delete|-
 table|messages|anon|insert|-
-table|messages|anon|maintain|-
 table|messages|anon|references|-
 table|messages|anon|select|-
 table|messages|anon|trigger|-
@@ -562,7 +543,6 @@ table|messages|authenticated|insert|generation_run_id
 table|messages|authenticated|insert|id
 table|messages|authenticated|insert|role
 table|messages|authenticated|insert|user_id
-table|messages|authenticated|maintain|-
 table|messages|authenticated|references|-
 table|messages|authenticated|select|-
 table|messages|authenticated|select|content
@@ -584,7 +564,6 @@ table|messages|authenticated|update|role
 table|messages|authenticated|update|user_id
 table|messages|service_role|delete|-
 table|messages|service_role|insert|-
-table|messages|service_role|maintain|-
 table|messages|service_role|references|-
 table|messages|service_role|select|-
 table|messages|service_role|trigger|-
@@ -592,7 +571,6 @@ table|messages|service_role|truncate|-
 table|messages|service_role|update|-
 table|profiles|anon|delete|-
 table|profiles|anon|insert|-
-table|profiles|anon|maintain|-
 table|profiles|anon|references|-
 table|profiles|anon|select|-
 table|profiles|anon|trigger|-
@@ -611,7 +589,6 @@ table|profiles|authenticated|insert|school_name
 table|profiles|authenticated|insert|stage
 table|profiles|authenticated|insert|subject
 table|profiles|authenticated|insert|updated_at
-table|profiles|authenticated|maintain|-
 table|profiles|authenticated|references|-
 table|profiles|authenticated|select|-
 table|profiles|authenticated|select|avatar_url
@@ -641,7 +618,6 @@ table|profiles|authenticated|update|subject
 table|profiles|authenticated|update|updated_at
 table|profiles|service_role|delete|-
 table|profiles|service_role|insert|-
-table|profiles|service_role|maintain|-
 table|profiles|service_role|references|-
 table|profiles|service_role|select|-
 table|profiles|service_role|trigger|-
@@ -649,7 +625,6 @@ table|profiles|service_role|truncate|-
 table|profiles|service_role|update|-
 table|project_item_versions|anon|delete|-
 table|project_item_versions|anon|insert|-
-table|project_item_versions|anon|maintain|-
 table|project_item_versions|anon|references|-
 table|project_item_versions|anon|select|-
 table|project_item_versions|anon|trigger|-
@@ -663,7 +638,6 @@ table|project_item_versions|authenticated|insert|id
 table|project_item_versions|authenticated|insert|project_item_id
 table|project_item_versions|authenticated|insert|user_id
 table|project_item_versions|authenticated|insert|version_no
-table|project_item_versions|authenticated|maintain|-
 table|project_item_versions|authenticated|references|-
 table|project_item_versions|authenticated|select|-
 table|project_item_versions|authenticated|select|content
@@ -683,7 +657,6 @@ table|project_item_versions|authenticated|update|user_id
 table|project_item_versions|authenticated|update|version_no
 table|project_item_versions|service_role|delete|-
 table|project_item_versions|service_role|insert|-
-table|project_item_versions|service_role|maintain|-
 table|project_item_versions|service_role|references|-
 table|project_item_versions|service_role|select|-
 table|project_item_versions|service_role|trigger|-
@@ -691,7 +664,6 @@ table|project_item_versions|service_role|truncate|-
 table|project_item_versions|service_role|update|-
 table|project_items|anon|delete|-
 table|project_items|anon|insert|-
-table|project_items|anon|maintain|-
 table|project_items|anon|references|-
 table|project_items|anon|select|-
 table|project_items|anon|trigger|-
@@ -707,7 +679,6 @@ table|project_items|authenticated|insert|position
 table|project_items|authenticated|insert|project_id
 table|project_items|authenticated|insert|updated_at
 table|project_items|authenticated|insert|user_id
-table|project_items|authenticated|maintain|-
 table|project_items|authenticated|references|-
 table|project_items|authenticated|select|-
 table|project_items|authenticated|select|content
@@ -731,7 +702,6 @@ table|project_items|authenticated|update|updated_at
 table|project_items|authenticated|update|user_id
 table|project_items|service_role|delete|-
 table|project_items|service_role|insert|-
-table|project_items|service_role|maintain|-
 table|project_items|service_role|references|-
 table|project_items|service_role|select|-
 table|project_items|service_role|trigger|-
@@ -739,7 +709,6 @@ table|project_items|service_role|truncate|-
 table|project_items|service_role|update|-
 table|projects|anon|delete|-
 table|projects|anon|insert|-
-table|projects|anon|maintain|-
 table|projects|anon|references|-
 table|projects|anon|select|-
 table|projects|anon|trigger|-
@@ -758,7 +727,6 @@ table|projects|authenticated|insert|term
 table|projects|authenticated|insert|title
 table|projects|authenticated|insert|updated_at
 table|projects|authenticated|insert|user_id
-table|projects|authenticated|maintain|-
 table|projects|authenticated|references|-
 table|projects|authenticated|select|-
 table|projects|authenticated|select|created_at
@@ -788,13 +756,11 @@ table|projects|authenticated|update|updated_at
 table|projects|authenticated|update|user_id
 table|projects|service_role|delete|-
 table|projects|service_role|insert|-
-table|projects|service_role|maintain|-
 table|projects|service_role|references|-
 table|projects|service_role|select|-
 table|projects|service_role|trigger|-
 table|projects|service_role|truncate|-
 table|projects|service_role|update|-
-table|student_alerts|authenticated|maintain|-
 table|student_alerts|authenticated|references|-
 table|student_alerts|authenticated|select|-
 table|student_alerts|authenticated|select|alert_type
@@ -845,7 +811,6 @@ table|student_alerts|service_role|insert|snoozed_until
 table|student_alerts|service_role|insert|student_id
 table|student_alerts|service_role|insert|suggested_action
 table|student_alerts|service_role|insert|teacher_id
-table|student_alerts|service_role|maintain|-
 table|student_alerts|service_role|references|-
 table|student_alerts|service_role|select|-
 table|student_alerts|service_role|select|alert_type
@@ -892,7 +857,6 @@ table|student_alerts|service_role|update|student_id
 table|student_alerts|service_role|update|suggested_action
 table|student_alerts|service_role|update|teacher_id
 table|student_grades|authenticated|delete|-
-table|student_grades|authenticated|maintain|-
 table|student_grades|authenticated|references|-
 table|student_grades|authenticated|select|-
 table|student_grades|authenticated|select|assessment_name
@@ -927,7 +891,6 @@ table|student_grades|service_role|insert|score
 table|student_grades|service_role|insert|student_id
 table|student_grades|service_role|insert|subject
 table|student_grades|service_role|insert|teacher_id
-table|student_grades|service_role|maintain|-
 table|student_grades|service_role|references|-
 table|student_grades|service_role|select|-
 table|student_grades|service_role|select|assessment_name
@@ -961,7 +924,6 @@ table|student_interventions|authenticated|insert|occurred_on
 table|student_interventions|authenticated|insert|student_id
 table|student_interventions|authenticated|insert|subject
 table|student_interventions|authenticated|insert|teacher_id
-table|student_interventions|authenticated|maintain|-
 table|student_interventions|authenticated|references|-
 table|student_interventions|authenticated|select|-
 table|student_interventions|authenticated|select|action
@@ -993,7 +955,6 @@ table|student_interventions|service_role|insert|occurred_on
 table|student_interventions|service_role|insert|student_id
 table|student_interventions|service_role|insert|subject
 table|student_interventions|service_role|insert|teacher_id
-table|student_interventions|service_role|maintain|-
 table|student_interventions|service_role|references|-
 table|student_interventions|service_role|select|-
 table|student_interventions|service_role|select|action
@@ -1026,7 +987,6 @@ table|student_submissions|authenticated|insert|status
 table|student_submissions|authenticated|insert|student_id
 table|student_submissions|authenticated|insert|subject
 table|student_submissions|authenticated|insert|teacher_id
-table|student_submissions|authenticated|maintain|-
 table|student_submissions|authenticated|references|-
 table|student_submissions|authenticated|select|-
 table|student_submissions|authenticated|select|created_at
@@ -1061,7 +1021,6 @@ table|student_submissions|service_role|insert|status
 table|student_submissions|service_role|insert|student_id
 table|student_submissions|service_role|insert|subject
 table|student_submissions|service_role|insert|teacher_id
-table|student_submissions|service_role|maintain|-
 table|student_submissions|service_role|references|-
 table|student_submissions|service_role|select|-
 table|student_submissions|service_role|select|created_at
@@ -1094,7 +1053,6 @@ table|students|authenticated|insert|id
 table|students|authenticated|insert|name
 table|students|authenticated|insert|teacher_id
 table|students|authenticated|insert|updated_at
-table|students|authenticated|maintain|-
 table|students|authenticated|references|-
 table|students|authenticated|select|-
 table|students|authenticated|select|class_label
@@ -1120,7 +1078,6 @@ table|students|service_role|insert|id
 table|students|service_role|insert|name
 table|students|service_role|insert|teacher_id
 table|students|service_role|insert|updated_at
-table|students|service_role|maintain|-
 table|students|service_role|references|-
 table|students|service_role|select|-
 table|students|service_role|select|class_label
@@ -1148,7 +1105,6 @@ table|teacher_alert_settings|authenticated|insert|drop_threshold_pct
 table|teacher_alert_settings|authenticated|insert|missing_work_alerts
 table|teacher_alert_settings|authenticated|insert|teacher_id
 table|teacher_alert_settings|authenticated|insert|updated_at
-table|teacher_alert_settings|authenticated|maintain|-
 table|teacher_alert_settings|authenticated|references|-
 table|teacher_alert_settings|authenticated|select|-
 table|teacher_alert_settings|authenticated|select|drop_threshold_pct
@@ -1166,7 +1122,6 @@ table|teacher_alert_settings|service_role|insert|drop_threshold_pct
 table|teacher_alert_settings|service_role|insert|missing_work_alerts
 table|teacher_alert_settings|service_role|insert|teacher_id
 table|teacher_alert_settings|service_role|insert|updated_at
-table|teacher_alert_settings|service_role|maintain|-
 table|teacher_alert_settings|service_role|references|-
 table|teacher_alert_settings|service_role|select|-
 table|teacher_alert_settings|service_role|select|drop_threshold_pct
@@ -1182,7 +1137,6 @@ table|teacher_alert_settings|service_role|update|teacher_id
 table|teacher_alert_settings|service_role|update|updated_at
 table|teacher_preferences|anon|delete|-
 table|teacher_preferences|anon|insert|-
-table|teacher_preferences|anon|maintain|-
 table|teacher_preferences|anon|references|-
 table|teacher_preferences|anon|select|-
 table|teacher_preferences|anon|trigger|-
@@ -1197,7 +1151,6 @@ table|teacher_preferences|authenticated|insert|explanation_style
 table|teacher_preferences|authenticated|insert|ui_locale
 table|teacher_preferences|authenticated|insert|updated_at
 table|teacher_preferences|authenticated|insert|user_id
-table|teacher_preferences|authenticated|maintain|-
 table|teacher_preferences|authenticated|references|-
 table|teacher_preferences|authenticated|select|-
 table|teacher_preferences|authenticated|select|content_locale
@@ -1219,7 +1172,6 @@ table|teacher_preferences|authenticated|update|updated_at
 table|teacher_preferences|authenticated|update|user_id
 table|teacher_preferences|service_role|delete|-
 table|teacher_preferences|service_role|insert|-
-table|teacher_preferences|service_role|maintain|-
 table|teacher_preferences|service_role|references|-
 table|teacher_preferences|service_role|select|-
 table|teacher_preferences|service_role|trigger|-
@@ -1227,7 +1179,6 @@ table|teacher_preferences|service_role|truncate|-
 table|teacher_preferences|service_role|update|-
 table|usage_quotas|anon|delete|-
 table|usage_quotas|anon|insert|-
-table|usage_quotas|anon|maintain|-
 table|usage_quotas|anon|references|-
 table|usage_quotas|anon|select|-
 table|usage_quotas|anon|trigger|-
@@ -1242,7 +1193,6 @@ table|usage_quotas|authenticated|insert|tokens_limit
 table|usage_quotas|authenticated|insert|tokens_used
 table|usage_quotas|authenticated|insert|updated_at
 table|usage_quotas|authenticated|insert|user_id
-table|usage_quotas|authenticated|maintain|-
 table|usage_quotas|authenticated|references|-
 table|usage_quotas|authenticated|select|-
 table|usage_quotas|authenticated|select|period_start
@@ -1264,7 +1214,6 @@ table|usage_quotas|authenticated|update|updated_at
 table|usage_quotas|authenticated|update|user_id
 table|usage_quotas|service_role|delete|-
 table|usage_quotas|service_role|insert|-
-table|usage_quotas|service_role|maintain|-
 table|usage_quotas|service_role|references|-
 table|usage_quotas|service_role|select|-
 table|usage_quotas|service_role|trigger|-
@@ -1272,7 +1221,6 @@ table|usage_quotas|service_role|truncate|-
 table|usage_quotas|service_role|update|-
 table|user_roles|anon|delete|-
 table|user_roles|anon|insert|-
-table|user_roles|anon|maintain|-
 table|user_roles|anon|references|-
 table|user_roles|anon|select|-
 table|user_roles|anon|trigger|-
@@ -1280,7 +1228,6 @@ table|user_roles|anon|truncate|-
 table|user_roles|anon|update|-
 table|user_roles|authenticated|delete|-
 table|user_roles|authenticated|insert|-
-table|user_roles|authenticated|maintain|-
 table|user_roles|authenticated|references|-
 table|user_roles|authenticated|select|-
 table|user_roles|authenticated|select|granted_at
@@ -1293,7 +1240,6 @@ table|user_roles|authenticated|truncate|-
 table|user_roles|authenticated|update|-
 table|user_roles|service_role|delete|-
 table|user_roles|service_role|insert|-
-table|user_roles|service_role|maintain|-
 table|user_roles|service_role|references|-
 table|user_roles|service_role|select|-
 table|user_roles|service_role|trigger|-

@@ -810,6 +810,15 @@ create policy user_roles_select_own on public.user_roles as PERMISSIVE for selec
 -- only adds grants leaves the defaults switched on and grants MORE than the
 -- real database does. service_role is left exactly as it is.
 -- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- Privileges, stated from scratch
+--
+-- Every object is stripped of anon and authenticated first, then re-granted
+-- from its own ACL. Grants alone are not enough: a fresh database hands new
+-- tables in public to those roles by default privilege, so a baseline that
+-- only adds grants leaves the defaults switched on and grants MORE than the
+-- real database does. service_role is left exactly as it is.
+-- ---------------------------------------------------------------------------
 revoke all on table public."audit_logs" from anon, authenticated;
 revoke all on sequence public."audit_logs_id_seq" from anon, authenticated;
 revoke all on table public."conversations" from anon, authenticated;
@@ -831,63 +840,63 @@ revoke all on table public."teacher_alert_settings" from anon, authenticated;
 revoke all on table public."teacher_preferences" from anon, authenticated;
 revoke all on table public."usage_quotas" from anon, authenticated;
 revoke all on table public."user_roles" from anon, authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."audit_logs" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."audit_logs" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."audit_logs" to service_role;
-grant select, usage on sequence public."audit_logs_id_seq" to anon;
-grant select, usage on sequence public."audit_logs_id_seq" to authenticated;
-grant select, usage on sequence public."audit_logs_id_seq" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."conversations" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."conversations" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."conversations" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_chunks" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_chunks" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_chunks" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_documents" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_documents" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_documents" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_sources" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_sources" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."curriculum_sources" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."generation_runs" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."generation_runs" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."generation_runs" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."messages" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."messages" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."messages" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."profiles" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."profiles" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."profiles" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."project_item_versions" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."project_item_versions" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."project_item_versions" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."project_items" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."project_items" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."project_items" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."projects" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."projects" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."projects" to service_role;
-grant maintain, references, select, temporary on table public."student_alerts" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."student_alerts" to service_role;
-grant maintain, references, select, temporary, truncate, usage on table public."student_grades" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."student_grades" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."student_interventions" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."student_interventions" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."student_submissions" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."student_submissions" to service_role;
-grant insert, maintain, references, select, temporary on table public."students" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."students" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."teacher_alert_settings" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."teacher_alert_settings" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."teacher_preferences" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."teacher_preferences" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."teacher_preferences" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."usage_quotas" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."usage_quotas" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."usage_quotas" to service_role;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."user_roles" to anon;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."user_roles" to authenticated;
-grant insert, maintain, references, select, temporary, truncate, usage on table public."user_roles" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."audit_logs" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."audit_logs" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."audit_logs" to service_role;
+grant select, update, usage on sequence public."audit_logs_id_seq" to anon;
+grant select, update, usage on sequence public."audit_logs_id_seq" to authenticated;
+grant select, update, usage on sequence public."audit_logs_id_seq" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."conversations" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."conversations" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."conversations" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_chunks" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_chunks" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_chunks" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_documents" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_documents" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_documents" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_sources" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_sources" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."curriculum_sources" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."generation_runs" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."generation_runs" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."generation_runs" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."messages" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."messages" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."messages" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."profiles" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."profiles" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."profiles" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."project_item_versions" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."project_item_versions" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."project_item_versions" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."project_items" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."project_items" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."project_items" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."projects" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."projects" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."projects" to service_role;
+grant references, select, trigger, truncate on table public."student_alerts" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."student_alerts" to service_role;
+grant delete, references, select, trigger, truncate, update on table public."student_grades" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."student_grades" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."student_interventions" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."student_interventions" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."student_submissions" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."student_submissions" to service_role;
+grant insert, references, select, trigger, truncate on table public."students" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."students" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."teacher_alert_settings" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."teacher_alert_settings" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."teacher_preferences" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."teacher_preferences" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."teacher_preferences" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."usage_quotas" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."usage_quotas" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."usage_quotas" to service_role;
+grant delete, insert, references, select, trigger, truncate, update on table public."user_roles" to anon;
+grant delete, insert, references, select, trigger, truncate, update on table public."user_roles" to authenticated;
+grant delete, insert, references, select, trigger, truncate, update on table public."user_roles" to service_role;
 grant insert ("action", "actor_id", "actor_role", "after_val", "before_val", "created_at", "entity", "entity_id", "id", "ip_address") on table public."audit_logs" to authenticated;
 grant select ("action", "actor_id", "actor_role", "after_val", "before_val", "created_at", "entity", "entity_id", "id", "ip_address") on table public."audit_logs" to authenticated;
 grant insert ("archived_at", "created_at", "id", "subject", "title", "updated_at", "user_id") on table public."conversations" to authenticated;
