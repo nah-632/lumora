@@ -45,7 +45,7 @@ with objs as (
          lower(x.privilege_type),
          null
   from pg_proc p
-  cross join lateral aclexplode(p.proacl) x
+  cross join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) x
   left join pg_roles g on g.oid = x.grantee
   where p.pronamespace = 'public'::regnamespace and p.prokind = 'f'
 )
