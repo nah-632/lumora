@@ -1,0 +1,35 @@
+# Functions that `anon` is allowed to EXECUTE in the public schema.
+#
+# The audit found anon holding EXECUTE on five SECURITY DEFINER functions that
+# 0010 had already ordered revoked; 0016 closed them. This file is the ratchet that
+# keeps a new one from appearing unnoticed: the CI guard fails if anon can execute
+# anything in public that is not listed here.
+#
+# Adding a line is a security decision, not a formality. Each function below was
+# reviewed:
+#
+#   has_role    reads user_roles for a given user id and role; returns a boolean.
+#               Reachable from RLS policies, so it must be callable by the roles
+#               that evaluate them. Exposes only "does this uuid have this role",
+#               and uuids are not discoverable through it.
+#   is_admin    same shape, one role.
+#   is_staff    same shape, staff roles.
+#   handle_new_user  fires from the signup trigger on auth.users, which runs with
+#               the function owner's rights; anon never invokes it directly.
+#
+# Everything else — the student data paths, the purge jobs, the admin read path —
+# must stay out of anon's reach. If a new function needs an anon grant, add it here
+# with a sentence saying what it exposes, or the guard will (correctly) fail.
+#   set_owner_teacher, tg_set_updated_at, touch_updated_at
+#               trigger functions. Calling one directly raises "can only be called
+#               as a trigger", so the grant is vestigial rather than reachable —
+#               Postgres gives every new function PUBLIC EXECUTE. They should still
+#               be revoked for tidiness; left here so the ratchet starts from the
+#               measured state instead of pre-empting a migration nobody asked for.
+has_role
+is_admin
+is_staff
+handle_new_user
+set_owner_teacher
+tg_set_updated_at
+touch_updated_at
