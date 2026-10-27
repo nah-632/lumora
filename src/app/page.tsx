@@ -1,13 +1,5 @@
-import { ServicesGrid } from "@/components/ServicesGrid";
-import { Hero } from "@/components/Hero";
-import { TrustStrip } from "@/components/TrustStrip";
+import { redirect } from "next/navigation";
 
-export default function HomePage() {
-  return (
-    <main>
-      <Hero />
-      <TrustStrip />
-      <ServicesGrid />
-    </main>
-  );
+export default function Home() {
+  redirect("/ar/students");
 }

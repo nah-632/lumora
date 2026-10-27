@@ -1,0 +1,533 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   LUMORA — public site
+   One token block, then the components the landing page composes from.
+   Nothing here overrides the utility classes the signed-in app already uses.
+   ========================================================================== */
+
+:root {
+  --lumora-red: #da291c;
+  --lumora-navy: #1d2a44;
+  --lumora-purple: #4b1e61;
+  --lumora-gold: #d4af37;
+  --lumora-paper: #f8f9fa;
+  --lumora-ink: #16202f;
+  --lumora-ink-soft: #5a6675;
+  --lumora-line: #e3e7ec;
+  --focus: #da291c;
+
+  /* Measured: 4.62:1 on paper, 4.87:1 for white on red (DESIGN.md). */
+  --cta-bg: var(--lumora-red);
+  --cta-fg: #ffffff;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 220ms;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--lumora-line) transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--lumora-paper);
+  color: var(--lumora-ink);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+
+/* Arabic sets taller and needs looser leading; Latin stays tighter. */
+[lang="ar"] body,
+[lang="ar"] {
+  font-family: var(--font-arabic), system-ui, sans-serif;
+  line-height: 1.75;
+  letter-spacing: 0; /* never letter-space Arabic */
+}
+
+[lang="en"] body,
+[lang="en"] {
+  font-family: var(--font-latin), system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--lumora-red) 20%, transparent);
+  color: var(--lumora-navy);
+}
+
+/* The parts no design system draws: caret, placeholder, scrollbar, focus,
+   underline offset and the numerals inside tabular data. */
+body {
+  caret-color: var(--lumora-red);
+}
+::placeholder {
+  color: #6b7688; /* 4.53:1 on paper, measured */
+  opacity: 1;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c9d0d9 transparent;
+}
+a {
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.tnum,
+[data-numeric] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Typography
+   Display face is headlines only. Body stays on IBM Plex Sans Arabic, which was
+   designed to hold a UI at 14-16px.
+   -------------------------------------------------------------------------- */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+
+.section-title {
+  margin-top: 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+  line-height: 1.28;
+  font-weight: 600; /* one step below the H1 */
+  color: var(--lumora-navy);
+  text-wrap: balance;
+}
+[lang="en"] .section-title {
+  line-height: 1.15;
+}
+
+.title-invert {
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   Explicit colour on every styled control: an unstyled <button> inherits the
+   browser's default blue, which fails contrast and looks undesigned.
+   -------------------------------------------------------------------------- */
+.btn-primary,
+.btn-ghost,
+.btn-outline-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding-inline: 1.5rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  transition: transform var(--dur) var(--ease), background-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  will-change: transform;
+}
+
+.btn-primary {
+  background: var(--cta-bg);
+  color: var(--cta-fg);
+  border: 1px solid var(--cta-bg);
+  box-shadow: 0 6px 18px -8px rgba(218, 41, 28, 0.55);
+}
+.btn-primary:hover {
+  background: #c02218;
+  border-color: #c02218;
+}
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.btn-sm {
+  min-height: 40px;
+  padding-inline: 1.1rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--lumora-navy);
+  border: 1px solid color-mix(in srgb, var(--lumora-navy) 22%, transparent);
+}
+.btn-ghost:hover {
+  border-color: var(--lumora-navy);
+  background: color-mix(in srgb, var(--lumora-navy) 4%, transparent);
+}
+
+.btn-outline-light {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+}
+.btn-outline-light:hover {
+  border-color: var(--lumora-gold);
+  color: #ffffff;
+}
+
+/* Arrow nudge: the only motion a button needs. */
+.btn-primary:hover .arrow-icon,
+.btn-ghost:hover .arrow-icon {
+  transform: translateX(2px);
+}
+.arrow-icon {
+  transition: transform var(--dur) var(--ease);
+}
+[dir="rtl"] .arrow-icon {
+  transform: scaleX(-1);
+}
+[dir="rtl"] .btn-primary:hover .arrow-icon,
+[dir="rtl"] .btn-ghost:hover .arrow-icon {
+  transform: scaleX(-1) translateX(2px);
+}
+
+/* --------------------------------------------------------------------------
+   Header
+   Off-white over the hero, then a hairline + shadow once the page scrolls, so
+   navigation stays legible over the dark part of the artwork.
+   -------------------------------------------------------------------------- */
+.site-header {
+  background: rgba(248, 249, 250, 0.86);
+  backdrop-filter: saturate(140%) blur(10px);
+  transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+.site-header[data-scrolled="true"] {
+  background: rgba(248, 249, 250, 0.97);
+  border-bottom-color: var(--lumora-line);
+  box-shadow: 0 1px 0 rgba(29, 42, 68, 0.04), 0 8px 24px -18px rgba(29, 42, 68, 0.35);
+}
+
+.nav-link {
+  position: relative;
+  display: inline-block;
+  padding-block: 0.35rem;
+  color: var(--lumora-navy);
+  transition: color var(--dur) var(--ease);
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1.5px;
+  background: var(--lumora-red);
+  transform: scaleX(0);
+  transform-origin: inline-start;
+  transition: transform var(--dur) var(--ease);
+}
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* --------------------------------------------------------------------------
+   Hero
+   The artwork spans the section; a wash over it levels the transition into the
+   off-white header and into the next section, so there is no visible seam.
+   -------------------------------------------------------------------------- */
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--lumora-paper);
+}
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.hero-image {
+  object-fit: cover;
+  object-position: 72% center;
+}
+/* RTL: mirror the artwork so the white field sits under the Arabic headline. */
+[dir="rtl"] .hero-image {
+  transform: scaleX(-1);
+  object-position: 28% center;
+}
+/* Washes: top blends into the off-white header, bottom into the next section. */
+.hero-wash {
+  position: absolute;
+  inset: 0;
+  /* The artwork's own light field is not flat enough under body text: a paper
+     wash on the text side guarantees the 4.5:1 the headline and lead need,
+     without touching the bulb on the other side. */
+  background:
+    linear-gradient(to bottom, rgba(248, 249, 250, 0.94) 0%, rgba(248, 249, 250, 0) 22%),
+    linear-gradient(to bottom, rgba(248, 249, 250, 0) 58%, var(--lumora-paper) 96%);
+}
+[dir="rtl"] .hero-wash {
+  background:
+    linear-gradient(to bottom, rgba(248, 249, 250, 0.94) 0%, rgba(248, 249, 250, 0) 22%),
+    linear-gradient(to bottom, rgba(248, 249, 250, 0) 58%, var(--lumora-paper) 96%),
+    /* inline-start = left in LTR, right in RTL */
+    linear-gradient(to left, rgba(248, 249, 250, 0.96) 0%, rgba(248, 249, 250, 0.88) 30%, rgba(248, 249, 250, 0.55) 46%, rgba(248, 249, 250, 0) 64%);
+}
+.hero-wash {
+  background:
+    linear-gradient(to bottom, rgba(248, 249, 250, 0.94) 0%, rgba(248, 249, 250, 0) 22%),
+    linear-gradient(to bottom, rgba(248, 249, 250, 0) 58%, var(--lumora-paper) 96%),
+    linear-gradient(to right, rgba(248, 249, 250, 0.96) 0%, rgba(248, 249, 250, 0.88) 30%, rgba(248, 249, 250, 0.55) 46%, rgba(248, 249, 250, 0) 64%);
+}
+
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--lumora-purple);
+}
+.hero-eyebrow-rule {
+  display: inline-block;
+  width: 1.75rem;
+  height: 1px;
+  background: var(--lumora-gold);
+  animation: rule-in 700ms var(--ease) both;
+  transform-origin: inline-start;
+}
+
+.hero-headline {
+  margin-top: 1.1rem;
+  font-family: var(--font-display);
+  font-weight: 700; /* El Messiri tops out at 700; the size contrast does the work */
+  font-size: clamp(2.1rem, 1.3rem + 3.6vw, 4.05rem);
+  line-height: 1.26;
+  color: var(--lumora-navy);
+  text-wrap: balance;
+  max-width: 24ch;
+}
+[lang="en"] .hero-headline {
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+}
+.hero-line {
+  display: block;
+  animation: line-rise 780ms var(--ease) both;
+}
+.hero-line:nth-child(2) {
+  animation-delay: 110ms;
+}
+.hero-accent {
+  font-style: normal;
+  color: var(--lumora-red);
+}
+
+.hero-lead {
+  margin-top: 1.35rem;
+  max-width: 34rem;
+  font-size: clamp(0.98rem, 0.9rem + 0.3vw, 1.08rem);
+  line-height: 1.85;
+  color: var(--lumora-ink-soft);
+  animation: line-rise 780ms var(--ease) 220ms both;
+}
+[lang="en"] .hero-lead {
+  line-height: 1.65;
+}
+.hero .btn-primary,
+.hero .btn-ghost {
+  animation: line-rise 700ms var(--ease) 320ms both;
+}
+
+@keyframes line-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes rule-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Sections
+   -------------------------------------------------------------------------- */
+.section {
+  padding-block: clamp(3rem, 1.6rem + 4.6vw, 5rem);
+}
+.section-tinted {
+  background: linear-gradient(to bottom, #fbfcfd, #f4f6f8);
+  border-block: 1px solid var(--lumora-line);
+}
+.section-navy {
+  background: var(--lumora-navy);
+  color: #ffffff;
+}
+
+/* Feature discs: one tint per feature, drawn from the palette, never saturated. */
+.disc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  transition: transform var(--dur) var(--ease);
+}
+.group:hover .disc {
+  transform: translateY(-2px);
+}
+.disc-students {
+  background: color-mix(in srgb, var(--lumora-navy) 8%, transparent);
+  color: var(--lumora-navy);
+}
+.disc-alerts {
+  background: color-mix(in srgb, var(--lumora-red) 9%, transparent);
+  color: #b32217;
+}
+.disc-plans {
+  background: color-mix(in srgb, var(--lumora-purple) 9%, transparent);
+  color: var(--lumora-purple);
+}
+.disc-exams {
+  background: color-mix(in srgb, var(--lumora-gold) 16%, transparent);
+  color: #8a6d18;
+}
+
+.feature-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--lumora-red);
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+.feature-more:hover {
+  text-decoration: underline;
+}
+
+.step-index {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--lumora-red);
+  font-variant-numeric: tabular-nums;
+  padding-top: 0.15rem;
+  min-width: 1.9rem;
+}
+
+.illustration-frame {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 2px 6px -2px rgba(29, 42, 68, 0.08), 0 24px 48px -32px rgba(29, 42, 68, 0.35);
+}
+
+.showcase-frame {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px -2px rgba(29, 42, 68, 0.09), 0 30px 60px -38px rgba(29, 42, 68, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   Reveal
+   Default state is VISIBLE. The hidden state is opted into by the effect in
+   MotionRoot.tsx, which only ever hides an element that is genuinely below the
+   fold at the moment it runs, and holds a fail-safe that reveals everything if
+   the observer never reports. So:
+
+     no JS            -> nothing is hidden, the page is a complete document
+     JS, no observer  -> the fail-safe reveals everything within 2s
+     JS + observer    -> elements rise once as they enter the viewport
+
+   Transform + opacity only, so no layout is invalidated by the animation.
+   -------------------------------------------------------------------------- */
+[data-reveal-pending] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 560ms var(--ease), transform 560ms var(--ease);
+}
+
+/* The framed images enter with a different gesture from the text blocks:
+   a short scale-down, not the same rise. One entrance per element type, not one
+   entrance for the whole page. */
+[data-reveal-pending="frame"] {
+  transform: scale(0.985);
+  transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+}
+
+[data-reveal-pending].is-revealed,
+[data-reveal-pending="frame"].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal-pending] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Mobile
+   Recomposed, not shrunk: the artwork becomes a top band and the headline sits
+   on the off-white below it, so text is never over the bulb.
+   -------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .hero-media {
+    inset: 0 0 auto 0;
+    height: 62vw;
+    min-height: 210px;
+  }
+  .hero-image {
+    object-position: 68% 42%;
+  }
+  [dir="rtl"] .hero-image {
+    object-position: 32% 42%;
+  }
+  .hero-wash {
+    background:
+      linear-gradient(to bottom, rgba(248, 249, 250, 0.55) 0%, rgba(248, 249, 250, 0.12) 30%, var(--lumora-paper) 88%);
+  }
+  .hero {
+    padding-top: calc(62vw - 1.5rem);
+    min-height: 0;
+  }
+  .hero .btn-primary,
+  .hero .btn-ghost {
+    width: 100%;
+  }
+}

@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* LUMORA foundations.
+   Direction is architectural: every rule here uses logical properties so the
+   same stylesheet serves Arabic (RTL) and English (LTR). Browser surfaces —
+   selection, caret, scrollbars, focus rings — are themed from the palette
+   rather than left at defaults. */
+
+:root {
+  /* Font stacks. Arabic and Latin are distinct: an Arabic face must set Arabic,
+     and the Latin face must not be used for it. */
+  /* next/font (layout.tsx) injects --font-arabic and --font-display on <html>.
+     The fallbacks keep Arabic legible before the face swaps. */
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Naskh Arabic", "Segoe UI", system-ui, sans-serif;
+  /* Latin runs (the LUMORA name, English UI) in the same Plex skeleton as the
+     Arabic body, so a mixed line keeps one stroke weight. */
+  --font-latin: "IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  /* El Messiri sets both Arabic and Latin, so headlines need no second family. */
+  --font-display: "El Messiri", "IBM Plex Sans Arabic", system-ui, sans-serif;
+
+  --lumora-red: #DA291C;
+  --lumora-navy: #1D2A44;
+  --lumora-purple: #4B1E61;
+  --lumora-gold: #D4AF37;
+  --lumora-paper: #F8F9FA;
+  --lumora-ink: #16202f;
+  --lumora-ink-soft: #5a6675;
+  --lumora-line: #e3e7ec;
+  --focus: #DA291C;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--lumora-line) transparent;
+}
+
+body {
+  background: var(--lumora-paper);
+  color: var(--lumora-ink);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+
+/* Arabic sets taller and needs looser leading; Latin stays tighter. */
+[lang="ar"] body,
+[lang="ar"] {
+  font-family: var(--font-arabic), system-ui, sans-serif;
+  line-height: 1.75;
+  letter-spacing: 0; /* never letter-space Arabic */
+}
+
+[lang="en"] body,
+[lang="en"] {
+  font-family: var(--font-latin), system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--lumora-red) 22%, transparent);
+  color: var(--lumora-navy);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Tabular data must align in both directions. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Numbers and Latin terms inside Arabic text need bidi isolation. */
+.bidi-isolate {
+  unicode-bidi: isolate;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--lumora-line);
+  border-radius: 999px;
+  border: 2px solid var(--lumora-paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skeleton shimmer, used for loading states. */
+@keyframes lumora-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #eceff3 25%, #f6f8fa 37%, #eceff3 63%);
+  background-size: 400% 100%;
+  animation: lumora-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ==========================================================================
+   Display scope
+   Headings, the wordmark where it is text, and CTA labels. Body copy, tables and
+   long text keep IBM Plex Sans Arabic — El Messiri is a display face and sets
+   too calligraphic for running text.
+   ========================================================================== */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+/* Three weights in use overall. H1 takes 700 and section headings 600: El
+   Messiri has no 800, and stretching a 700 to fake one would blunt the
+   calligraphic terminals the face is chosen for. */
+h1 {
+  font-weight: 700;
+}
+h2,
+h3 {
+  font-weight: 600;
+}
+
+/* The wordmark, wherever the name is set as text rather than the supplied image. */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: normal;
+}
+
+/* CTA labels and small labels on controls. */
+.btn-primary,
+.btn-ghost,
+.btn-outline-light,
+.btn-sm,
+.label {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
