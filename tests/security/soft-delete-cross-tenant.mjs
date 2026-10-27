@@ -45,7 +45,7 @@ function check(name, ok, detail) {
 async function rest(path, init = {}, headers = {}) {
   const res = await fetch(`${URL_}/rest/v1/${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: { "Content-Type": "application/json", ...(init.headers ?? {}), ...headers },
   });
   const text = await res.text();
   let body = null;
