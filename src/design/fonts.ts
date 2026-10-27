@@ -1,39 +1,82 @@
-import { El_Messiri, IBM_Plex_Sans_Arabic } from "next/font/google";
+import localFont from "next/font/local";
 
 /**
- * The two typefaces, declared once and imported by the layout that renders
- * <html>. They live outside the layout file because Next.js generates route
- * types from every export of a layout module and rejects anything that is not a
- * recognised layout export — a font object must not be one of them.
+ * Typefaces, self-hosted. No request leaves the build or the browser for
+ * fonts.googleapis.com.
  *
- * Typography is locked by a specimen test (El Messiri, Noto Kufi Arabic,
- * Markazi Text and Cairo against IBM Plex Sans Arabic, rendered on the real
- * headline at 64px and measured in the browser). Both families ship via
- * next/font, so there is no third-party request at runtime and the generated
- * size-adjust keeps the swap from shifting layout.
+ * Until now these came from `next/font/google`, which fetches the CSS and the
+ * woff2 files at BUILD time. That made the production build depend on Google
+ * being reachable from CI: one transient fetch failure failed the whole build
+ * job with `An error occurred in next/font … Cannot read properties of null`,
+ * which is what a self-hosted font cannot do.
  *
- * Display: El Messiri at 500/600/700. Holds the headline at 64-80px without the
- * rounded softness that makes most Arabic display faces read as children's
- * material; its calligraphic terminals give the slogan a hand-cut character,
- * and it sets 397px wide where Noto Kufi Arabic takes 438px — an extra word per
- * line at hero size. It also covers Latin, so no second display face ships.
+ * ---------------------------------------------------------------------------
+ * WHY FOUR INSTANCES AND NOT TWO
  *
- * Text: IBM Plex Sans Arabic. Drawn for Arabic alongside a Latin family with the
- * same skeleton, so «التعليم» beside "LUMORA" keeps one stroke weight. It carries
- * the UI where El Messiri's open counters would read thin below 20px.
+ * The Arabic and Latin subsets are separate files (that is how Google ships
+ * them), and a subset file does not contain the other script's glyphs. Pointing
+ * one family at both and hoping the browser sorts it out is exactly the bug that
+ * made headings unreadable earlier in this project: a Latin face claimed Arabic
+ * codepoints and rendered them with colliding, unjoined letters.
  *
- * Three weights in use overall: 400 body, 500 label and button, 600-700 display.
+ * So each subset is its own family, and the CSS simply lists them in order:
+ * the Arabic family first for Arabic, which falls through to the Latin family
+ * only for characters it does not contain. Per-glyph fallback does the work that
+ * `unicode-range` did in the hand-written @font-face blocks, without hand-writing
+ * them.
+ *
+ * Weights in use stay three: 400 body, 500 label/button, 600-700 display.
+ * `display: "swap"` on every face, so text paints immediately in the fallback and
+ * reflows once — never invisible text.
  */
-export const display = El_Messiri({
-  subsets: ["arabic", "latin"],
-  weight: ["500", "600", "700"],
+
+const displayAr = localFont({
+  src: [
+    { path: "../../public/fonts/elmessiri-500-arabic.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/elmessiri-600-arabic.woff2", weight: "600", style: "normal" },
+    { path: "../../public/fonts/elmessiri-700-arabic.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
-  variable: "--font-display",
+  variable: "--font-display-ar",
+  fallback: ["Noto Naskh Arabic", "serif"],
 });
 
-export const text = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600"],
+const displayLat = localFont({
+  src: [
+    { path: "../../public/fonts/elmessiri-500-latin.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/elmessiri-600-latin.woff2", weight: "600", style: "normal" },
+    { path: "../../public/fonts/elmessiri-700-latin.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
-  variable: "--font-arabic",
+  variable: "--font-display-lat",
+  fallback: ["Georgia", "serif"],
 });
+
+const textAr = localFont({
+  src: [
+    { path: "../../public/fonts/plexarabic-400-arabic.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/plexarabic-500-arabic.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/plexarabic-600-arabic.woff2", weight: "600", style: "normal" },
+  ],
+  display: "swap",
+  variable: "--font-text-ar",
+  fallback: ["Noto Naskh Arabic", "sans-serif"],
+});
+
+const textLat = localFont({
+  src: [
+    { path: "../../public/fonts/plexlatin-400-latin.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/plexlatin-500-latin.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/plexlatin-600-latin.woff2", weight: "600", style: "normal" },
+  ],
+  display: "swap",
+  variable: "--font-text-lat",
+  fallback: ["Segoe UI", "sans-serif"],
+});
+
+/**
+ * The shape the layout already consumes. Two class names per export, so the root
+ * element carries four font variables and `globals.css` composes the stacks.
+ */
+export const display = { variable: `${displayAr.variable} ${displayLat.variable}` };
+export const text = { variable: `${textAr.variable} ${textLat.variable}` };
