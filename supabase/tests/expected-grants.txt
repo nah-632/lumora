@@ -1,0 +1,1301 @@
+function|admin_read_student(p_student_id uuid, p_reason text)|PUBLIC|execute|-
+function|admin_read_student(p_student_id uuid, p_reason text)|anon|execute|-
+function|admin_read_student(p_student_id uuid, p_reason text)|authenticated|execute|-
+function|admin_read_student(p_student_id uuid, p_reason text)|service_role|execute|-
+function|alert_basis_is_consistent(p_alert uuid)|authenticated|execute|-
+function|alert_basis_is_consistent(p_alert uuid)|service_role|execute|-
+function|citext(boolean)|PUBLIC|execute|-
+function|citext(boolean)|anon|execute|-
+function|citext(boolean)|authenticated|execute|-
+function|citext(boolean)|service_role|execute|-
+function|citext(character)|PUBLIC|execute|-
+function|citext(character)|anon|execute|-
+function|citext(character)|authenticated|execute|-
+function|citext(character)|service_role|execute|-
+function|citext(inet)|PUBLIC|execute|-
+function|citext(inet)|anon|execute|-
+function|citext(inet)|authenticated|execute|-
+function|citext(inet)|service_role|execute|-
+function|citext_cmp(citext, citext)|PUBLIC|execute|-
+function|citext_cmp(citext, citext)|anon|execute|-
+function|citext_cmp(citext, citext)|authenticated|execute|-
+function|citext_cmp(citext, citext)|service_role|execute|-
+function|citext_eq(citext, citext)|PUBLIC|execute|-
+function|citext_eq(citext, citext)|anon|execute|-
+function|citext_eq(citext, citext)|authenticated|execute|-
+function|citext_eq(citext, citext)|service_role|execute|-
+function|citext_ge(citext, citext)|PUBLIC|execute|-
+function|citext_ge(citext, citext)|anon|execute|-
+function|citext_ge(citext, citext)|authenticated|execute|-
+function|citext_ge(citext, citext)|service_role|execute|-
+function|citext_gt(citext, citext)|PUBLIC|execute|-
+function|citext_gt(citext, citext)|anon|execute|-
+function|citext_gt(citext, citext)|authenticated|execute|-
+function|citext_gt(citext, citext)|service_role|execute|-
+function|citext_hash(citext)|PUBLIC|execute|-
+function|citext_hash(citext)|anon|execute|-
+function|citext_hash(citext)|authenticated|execute|-
+function|citext_hash(citext)|service_role|execute|-
+function|citext_hash_extended(citext, bigint)|PUBLIC|execute|-
+function|citext_hash_extended(citext, bigint)|anon|execute|-
+function|citext_hash_extended(citext, bigint)|authenticated|execute|-
+function|citext_hash_extended(citext, bigint)|service_role|execute|-
+function|citext_larger(citext, citext)|PUBLIC|execute|-
+function|citext_larger(citext, citext)|anon|execute|-
+function|citext_larger(citext, citext)|authenticated|execute|-
+function|citext_larger(citext, citext)|service_role|execute|-
+function|citext_le(citext, citext)|PUBLIC|execute|-
+function|citext_le(citext, citext)|anon|execute|-
+function|citext_le(citext, citext)|authenticated|execute|-
+function|citext_le(citext, citext)|service_role|execute|-
+function|citext_lt(citext, citext)|PUBLIC|execute|-
+function|citext_lt(citext, citext)|anon|execute|-
+function|citext_lt(citext, citext)|authenticated|execute|-
+function|citext_lt(citext, citext)|service_role|execute|-
+function|citext_ne(citext, citext)|PUBLIC|execute|-
+function|citext_ne(citext, citext)|anon|execute|-
+function|citext_ne(citext, citext)|authenticated|execute|-
+function|citext_ne(citext, citext)|service_role|execute|-
+function|citext_pattern_cmp(citext, citext)|PUBLIC|execute|-
+function|citext_pattern_cmp(citext, citext)|anon|execute|-
+function|citext_pattern_cmp(citext, citext)|authenticated|execute|-
+function|citext_pattern_cmp(citext, citext)|service_role|execute|-
+function|citext_pattern_ge(citext, citext)|PUBLIC|execute|-
+function|citext_pattern_ge(citext, citext)|anon|execute|-
+function|citext_pattern_ge(citext, citext)|authenticated|execute|-
+function|citext_pattern_ge(citext, citext)|service_role|execute|-
+function|citext_pattern_gt(citext, citext)|PUBLIC|execute|-
+function|citext_pattern_gt(citext, citext)|anon|execute|-
+function|citext_pattern_gt(citext, citext)|authenticated|execute|-
+function|citext_pattern_gt(citext, citext)|service_role|execute|-
+function|citext_pattern_le(citext, citext)|PUBLIC|execute|-
+function|citext_pattern_le(citext, citext)|anon|execute|-
+function|citext_pattern_le(citext, citext)|authenticated|execute|-
+function|citext_pattern_le(citext, citext)|service_role|execute|-
+function|citext_pattern_lt(citext, citext)|PUBLIC|execute|-
+function|citext_pattern_lt(citext, citext)|anon|execute|-
+function|citext_pattern_lt(citext, citext)|authenticated|execute|-
+function|citext_pattern_lt(citext, citext)|service_role|execute|-
+function|citext_smaller(citext, citext)|PUBLIC|execute|-
+function|citext_smaller(citext, citext)|anon|execute|-
+function|citext_smaller(citext, citext)|authenticated|execute|-
+function|citext_smaller(citext, citext)|service_role|execute|-
+function|citextin(cstring)|PUBLIC|execute|-
+function|citextin(cstring)|anon|execute|-
+function|citextin(cstring)|authenticated|execute|-
+function|citextin(cstring)|service_role|execute|-
+function|citextout(citext)|PUBLIC|execute|-
+function|citextout(citext)|anon|execute|-
+function|citextout(citext)|authenticated|execute|-
+function|citextout(citext)|service_role|execute|-
+function|citextrecv(internal)|PUBLIC|execute|-
+function|citextrecv(internal)|anon|execute|-
+function|citextrecv(internal)|authenticated|execute|-
+function|citextrecv(internal)|service_role|execute|-
+function|citextsend(citext)|PUBLIC|execute|-
+function|citextsend(citext)|anon|execute|-
+function|citextsend(citext)|authenticated|execute|-
+function|citextsend(citext)|service_role|execute|-
+function|handle_new_user()|PUBLIC|execute|-
+function|handle_new_user()|anon|execute|-
+function|handle_new_user()|authenticated|execute|-
+function|handle_new_user()|service_role|execute|-
+function|has_privilege_probe(p_role text, p_table text, p_privilege text|authenticated|execute|-
+function|has_privilege_probe(p_role text, p_table text, p_privilege text|service_role|execute|-
+function|has_role(p_user_id uuid, p_role app_role)|PUBLIC|execute|-
+function|has_role(p_user_id uuid, p_role app_role)|anon|execute|-
+function|has_role(p_user_id uuid, p_role app_role)|authenticated|execute|-
+function|has_role(p_user_id uuid, p_role app_role)|service_role|execute|-
+function|is_admin(p_user_id uuid)|PUBLIC|execute|-
+function|is_admin(p_user_id uuid)|anon|execute|-
+function|is_admin(p_user_id uuid)|authenticated|execute|-
+function|is_admin(p_user_id uuid)|service_role|execute|-
+function|is_staff(p_user_id uuid)|PUBLIC|execute|-
+function|is_staff(p_user_id uuid)|anon|execute|-
+function|is_staff(p_user_id uuid)|authenticated|execute|-
+function|is_staff(p_user_id uuid)|service_role|execute|-
+function|purge_deleted_students()|PUBLIC|execute|-
+function|purge_deleted_students()|anon|execute|-
+function|purge_deleted_students()|authenticated|execute|-
+function|purge_deleted_students()|service_role|execute|-
+function|purge_expired_students_job()|PUBLIC|execute|-
+function|purge_expired_students_job()|anon|execute|-
+function|purge_expired_students_job()|authenticated|execute|-
+function|purge_expired_students_job()|service_role|execute|-
+function|regexp_match(citext, citext)|PUBLIC|execute|-
+function|regexp_match(citext, citext)|anon|execute|-
+function|regexp_match(citext, citext)|authenticated|execute|-
+function|regexp_match(citext, citext)|service_role|execute|-
+function|regexp_match(citext, citext, text)|PUBLIC|execute|-
+function|regexp_match(citext, citext, text)|anon|execute|-
+function|regexp_match(citext, citext, text)|authenticated|execute|-
+function|regexp_match(citext, citext, text)|service_role|execute|-
+function|regexp_matches(citext, citext)|PUBLIC|execute|-
+function|regexp_matches(citext, citext)|anon|execute|-
+function|regexp_matches(citext, citext)|authenticated|execute|-
+function|regexp_matches(citext, citext)|service_role|execute|-
+function|regexp_matches(citext, citext, text)|PUBLIC|execute|-
+function|regexp_matches(citext, citext, text)|anon|execute|-
+function|regexp_matches(citext, citext, text)|authenticated|execute|-
+function|regexp_matches(citext, citext, text)|service_role|execute|-
+function|regexp_replace(citext, citext, text)|PUBLIC|execute|-
+function|regexp_replace(citext, citext, text)|anon|execute|-
+function|regexp_replace(citext, citext, text)|authenticated|execute|-
+function|regexp_replace(citext, citext, text)|service_role|execute|-
+function|regexp_replace(citext, citext, text, text)|PUBLIC|execute|-
+function|regexp_replace(citext, citext, text, text)|anon|execute|-
+function|regexp_replace(citext, citext, text, text)|authenticated|execute|-
+function|regexp_replace(citext, citext, text, text)|service_role|execute|-
+function|regexp_split_to_array(citext, citext)|PUBLIC|execute|-
+function|regexp_split_to_array(citext, citext)|anon|execute|-
+function|regexp_split_to_array(citext, citext)|authenticated|execute|-
+function|regexp_split_to_array(citext, citext)|service_role|execute|-
+function|regexp_split_to_array(citext, citext, text)|PUBLIC|execute|-
+function|regexp_split_to_array(citext, citext, text)|anon|execute|-
+function|regexp_split_to_array(citext, citext, text)|authenticated|execute|-
+function|regexp_split_to_array(citext, citext, text)|service_role|execute|-
+function|regexp_split_to_table(citext, citext)|PUBLIC|execute|-
+function|regexp_split_to_table(citext, citext)|anon|execute|-
+function|regexp_split_to_table(citext, citext)|authenticated|execute|-
+function|regexp_split_to_table(citext, citext)|service_role|execute|-
+function|regexp_split_to_table(citext, citext, text)|PUBLIC|execute|-
+function|regexp_split_to_table(citext, citext, text)|anon|execute|-
+function|regexp_split_to_table(citext, citext, text)|authenticated|execute|-
+function|regexp_split_to_table(citext, citext, text)|service_role|execute|-
+function|replace(citext, citext, citext)|PUBLIC|execute|-
+function|replace(citext, citext, citext)|anon|execute|-
+function|replace(citext, citext, citext)|authenticated|execute|-
+function|replace(citext, citext, citext)|service_role|execute|-
+function|restore_student(p_student_id uuid)|PUBLIC|execute|-
+function|restore_student(p_student_id uuid)|anon|execute|-
+function|restore_student(p_student_id uuid)|authenticated|execute|-
+function|restore_student(p_student_id uuid)|service_role|execute|-
+function|set_owner_teacher()|PUBLIC|execute|-
+function|set_owner_teacher()|anon|execute|-
+function|set_owner_teacher()|authenticated|execute|-
+function|set_owner_teacher()|service_role|execute|-
+function|soft_delete_student(p_student_id uuid)|PUBLIC|execute|-
+function|soft_delete_student(p_student_id uuid)|anon|execute|-
+function|soft_delete_student(p_student_id uuid)|authenticated|execute|-
+function|soft_delete_student(p_student_id uuid)|service_role|execute|-
+function|split_part(citext, citext, integer)|PUBLIC|execute|-
+function|split_part(citext, citext, integer)|anon|execute|-
+function|split_part(citext, citext, integer)|authenticated|execute|-
+function|split_part(citext, citext, integer)|service_role|execute|-
+function|strpos(citext, citext)|PUBLIC|execute|-
+function|strpos(citext, citext)|anon|execute|-
+function|strpos(citext, citext)|authenticated|execute|-
+function|strpos(citext, citext)|service_role|execute|-
+function|students_is_active(p_id uuid, p_teacher uuid)|PUBLIC|execute|-
+function|students_is_active(p_id uuid, p_teacher uuid)|anon|execute|-
+function|students_is_active(p_id uuid, p_teacher uuid)|authenticated|execute|-
+function|students_is_active(p_id uuid, p_teacher uuid)|service_role|execute|-
+function|texticlike(citext, citext)|PUBLIC|execute|-
+function|texticlike(citext, citext)|anon|execute|-
+function|texticlike(citext, citext)|authenticated|execute|-
+function|texticlike(citext, citext)|service_role|execute|-
+function|texticlike(citext, text)|PUBLIC|execute|-
+function|texticlike(citext, text)|anon|execute|-
+function|texticlike(citext, text)|authenticated|execute|-
+function|texticlike(citext, text)|service_role|execute|-
+function|texticnlike(citext, citext)|PUBLIC|execute|-
+function|texticnlike(citext, citext)|anon|execute|-
+function|texticnlike(citext, citext)|authenticated|execute|-
+function|texticnlike(citext, citext)|service_role|execute|-
+function|texticnlike(citext, text)|PUBLIC|execute|-
+function|texticnlike(citext, text)|anon|execute|-
+function|texticnlike(citext, text)|authenticated|execute|-
+function|texticnlike(citext, text)|service_role|execute|-
+function|texticregexeq(citext, citext)|PUBLIC|execute|-
+function|texticregexeq(citext, citext)|anon|execute|-
+function|texticregexeq(citext, citext)|authenticated|execute|-
+function|texticregexeq(citext, citext)|service_role|execute|-
+function|texticregexeq(citext, text)|PUBLIC|execute|-
+function|texticregexeq(citext, text)|anon|execute|-
+function|texticregexeq(citext, text)|authenticated|execute|-
+function|texticregexeq(citext, text)|service_role|execute|-
+function|texticregexne(citext, citext)|PUBLIC|execute|-
+function|texticregexne(citext, citext)|anon|execute|-
+function|texticregexne(citext, citext)|authenticated|execute|-
+function|texticregexne(citext, citext)|service_role|execute|-
+function|texticregexne(citext, text)|PUBLIC|execute|-
+function|texticregexne(citext, text)|anon|execute|-
+function|texticregexne(citext, text)|authenticated|execute|-
+function|texticregexne(citext, text)|service_role|execute|-
+function|tg_set_updated_at()|PUBLIC|execute|-
+function|tg_set_updated_at()|anon|execute|-
+function|tg_set_updated_at()|authenticated|execute|-
+function|tg_set_updated_at()|service_role|execute|-
+function|touch_updated_at()|PUBLIC|execute|-
+function|touch_updated_at()|anon|execute|-
+function|touch_updated_at()|authenticated|execute|-
+function|touch_updated_at()|service_role|execute|-
+function|translate(citext, citext, text)|PUBLIC|execute|-
+function|translate(citext, citext, text)|anon|execute|-
+function|translate(citext, citext, text)|authenticated|execute|-
+function|translate(citext, citext, text)|service_role|execute|-
+sequence|audit_logs_id_seq|anon|select|-
+sequence|audit_logs_id_seq|anon|update|-
+sequence|audit_logs_id_seq|anon|usage|-
+sequence|audit_logs_id_seq|authenticated|select|-
+sequence|audit_logs_id_seq|authenticated|update|-
+sequence|audit_logs_id_seq|authenticated|usage|-
+sequence|audit_logs_id_seq|service_role|select|-
+sequence|audit_logs_id_seq|service_role|update|-
+sequence|audit_logs_id_seq|service_role|usage|-
+table|audit_logs|anon|delete|-
+table|audit_logs|anon|insert|-
+table|audit_logs|anon|maintain|-
+table|audit_logs|anon|references|-
+table|audit_logs|anon|select|-
+table|audit_logs|anon|trigger|-
+table|audit_logs|anon|truncate|-
+table|audit_logs|anon|update|-
+table|audit_logs|authenticated|delete|-
+table|audit_logs|authenticated|insert|-
+table|audit_logs|authenticated|insert|action
+table|audit_logs|authenticated|insert|actor_id
+table|audit_logs|authenticated|insert|actor_role
+table|audit_logs|authenticated|insert|after_val
+table|audit_logs|authenticated|insert|before_val
+table|audit_logs|authenticated|insert|created_at
+table|audit_logs|authenticated|insert|entity
+table|audit_logs|authenticated|insert|entity_id
+table|audit_logs|authenticated|insert|id
+table|audit_logs|authenticated|insert|ip_address
+table|audit_logs|authenticated|maintain|-
+table|audit_logs|authenticated|references|-
+table|audit_logs|authenticated|select|-
+table|audit_logs|authenticated|select|action
+table|audit_logs|authenticated|select|actor_id
+table|audit_logs|authenticated|select|actor_role
+table|audit_logs|authenticated|select|after_val
+table|audit_logs|authenticated|select|before_val
+table|audit_logs|authenticated|select|created_at
+table|audit_logs|authenticated|select|entity
+table|audit_logs|authenticated|select|entity_id
+table|audit_logs|authenticated|select|id
+table|audit_logs|authenticated|select|ip_address
+table|audit_logs|authenticated|trigger|-
+table|audit_logs|authenticated|truncate|-
+table|audit_logs|authenticated|update|-
+table|audit_logs|service_role|delete|-
+table|audit_logs|service_role|insert|-
+table|audit_logs|service_role|maintain|-
+table|audit_logs|service_role|references|-
+table|audit_logs|service_role|select|-
+table|audit_logs|service_role|trigger|-
+table|audit_logs|service_role|truncate|-
+table|audit_logs|service_role|update|-
+table|conversations|anon|delete|-
+table|conversations|anon|insert|-
+table|conversations|anon|maintain|-
+table|conversations|anon|references|-
+table|conversations|anon|select|-
+table|conversations|anon|trigger|-
+table|conversations|anon|truncate|-
+table|conversations|anon|update|-
+table|conversations|authenticated|delete|-
+table|conversations|authenticated|insert|-
+table|conversations|authenticated|insert|archived_at
+table|conversations|authenticated|insert|created_at
+table|conversations|authenticated|insert|id
+table|conversations|authenticated|insert|subject
+table|conversations|authenticated|insert|title
+table|conversations|authenticated|insert|updated_at
+table|conversations|authenticated|insert|user_id
+table|conversations|authenticated|maintain|-
+table|conversations|authenticated|references|-
+table|conversations|authenticated|select|-
+table|conversations|authenticated|select|archived_at
+table|conversations|authenticated|select|created_at
+table|conversations|authenticated|select|id
+table|conversations|authenticated|select|subject
+table|conversations|authenticated|select|title
+table|conversations|authenticated|select|updated_at
+table|conversations|authenticated|select|user_id
+table|conversations|authenticated|trigger|-
+table|conversations|authenticated|truncate|-
+table|conversations|authenticated|update|-
+table|conversations|authenticated|update|archived_at
+table|conversations|authenticated|update|created_at
+table|conversations|authenticated|update|id
+table|conversations|authenticated|update|subject
+table|conversations|authenticated|update|title
+table|conversations|authenticated|update|updated_at
+table|conversations|authenticated|update|user_id
+table|conversations|service_role|delete|-
+table|conversations|service_role|insert|-
+table|conversations|service_role|maintain|-
+table|conversations|service_role|references|-
+table|conversations|service_role|select|-
+table|conversations|service_role|trigger|-
+table|conversations|service_role|truncate|-
+table|conversations|service_role|update|-
+table|curriculum_chunks|anon|delete|-
+table|curriculum_chunks|anon|insert|-
+table|curriculum_chunks|anon|maintain|-
+table|curriculum_chunks|anon|references|-
+table|curriculum_chunks|anon|select|-
+table|curriculum_chunks|anon|trigger|-
+table|curriculum_chunks|anon|truncate|-
+table|curriculum_chunks|anon|update|-
+table|curriculum_chunks|authenticated|delete|-
+table|curriculum_chunks|authenticated|insert|-
+table|curriculum_chunks|authenticated|insert|chunk_index
+table|curriculum_chunks|authenticated|insert|content
+table|curriculum_chunks|authenticated|insert|created_at
+table|curriculum_chunks|authenticated|insert|document_id
+table|curriculum_chunks|authenticated|insert|id
+table|curriculum_chunks|authenticated|insert|token_count
+table|curriculum_chunks|authenticated|maintain|-
+table|curriculum_chunks|authenticated|references|-
+table|curriculum_chunks|authenticated|select|-
+table|curriculum_chunks|authenticated|select|chunk_index
+table|curriculum_chunks|authenticated|select|content
+table|curriculum_chunks|authenticated|select|created_at
+table|curriculum_chunks|authenticated|select|document_id
+table|curriculum_chunks|authenticated|select|id
+table|curriculum_chunks|authenticated|select|token_count
+table|curriculum_chunks|authenticated|trigger|-
+table|curriculum_chunks|authenticated|truncate|-
+table|curriculum_chunks|authenticated|update|-
+table|curriculum_chunks|authenticated|update|chunk_index
+table|curriculum_chunks|authenticated|update|content
+table|curriculum_chunks|authenticated|update|created_at
+table|curriculum_chunks|authenticated|update|document_id
+table|curriculum_chunks|authenticated|update|id
+table|curriculum_chunks|authenticated|update|token_count
+table|curriculum_chunks|service_role|delete|-
+table|curriculum_chunks|service_role|insert|-
+table|curriculum_chunks|service_role|maintain|-
+table|curriculum_chunks|service_role|references|-
+table|curriculum_chunks|service_role|select|-
+table|curriculum_chunks|service_role|trigger|-
+table|curriculum_chunks|service_role|truncate|-
+table|curriculum_chunks|service_role|update|-
+table|curriculum_documents|anon|delete|-
+table|curriculum_documents|anon|insert|-
+table|curriculum_documents|anon|maintain|-
+table|curriculum_documents|anon|references|-
+table|curriculum_documents|anon|select|-
+table|curriculum_documents|anon|trigger|-
+table|curriculum_documents|anon|truncate|-
+table|curriculum_documents|anon|update|-
+table|curriculum_documents|authenticated|delete|-
+table|curriculum_documents|authenticated|insert|-
+table|curriculum_documents|authenticated|insert|created_at
+table|curriculum_documents|authenticated|insert|id
+table|curriculum_documents|authenticated|insert|page_from
+table|curriculum_documents|authenticated|insert|page_to
+table|curriculum_documents|authenticated|insert|source_id
+table|curriculum_documents|authenticated|insert|title
+table|curriculum_documents|authenticated|insert|unit
+table|curriculum_documents|authenticated|maintain|-
+table|curriculum_documents|authenticated|references|-
+table|curriculum_documents|authenticated|select|-
+table|curriculum_documents|authenticated|select|created_at
+table|curriculum_documents|authenticated|select|id
+table|curriculum_documents|authenticated|select|page_from
+table|curriculum_documents|authenticated|select|page_to
+table|curriculum_documents|authenticated|select|source_id
+table|curriculum_documents|authenticated|select|title
+table|curriculum_documents|authenticated|select|unit
+table|curriculum_documents|authenticated|trigger|-
+table|curriculum_documents|authenticated|truncate|-
+table|curriculum_documents|authenticated|update|-
+table|curriculum_documents|authenticated|update|created_at
+table|curriculum_documents|authenticated|update|id
+table|curriculum_documents|authenticated|update|page_from
+table|curriculum_documents|authenticated|update|page_to
+table|curriculum_documents|authenticated|update|source_id
+table|curriculum_documents|authenticated|update|title
+table|curriculum_documents|authenticated|update|unit
+table|curriculum_documents|service_role|delete|-
+table|curriculum_documents|service_role|insert|-
+table|curriculum_documents|service_role|maintain|-
+table|curriculum_documents|service_role|references|-
+table|curriculum_documents|service_role|select|-
+table|curriculum_documents|service_role|trigger|-
+table|curriculum_documents|service_role|truncate|-
+table|curriculum_documents|service_role|update|-
+table|curriculum_sources|anon|delete|-
+table|curriculum_sources|anon|insert|-
+table|curriculum_sources|anon|maintain|-
+table|curriculum_sources|anon|references|-
+table|curriculum_sources|anon|select|-
+table|curriculum_sources|anon|trigger|-
+table|curriculum_sources|anon|truncate|-
+table|curriculum_sources|anon|update|-
+table|curriculum_sources|authenticated|delete|-
+table|curriculum_sources|authenticated|insert|-
+table|curriculum_sources|authenticated|insert|created_at
+table|curriculum_sources|authenticated|insert|edition
+table|curriculum_sources|authenticated|insert|id
+table|curriculum_sources|authenticated|insert|publisher
+table|curriculum_sources|authenticated|insert|stage
+table|curriculum_sources|authenticated|insert|status
+table|curriculum_sources|authenticated|insert|subject
+table|curriculum_sources|authenticated|insert|title
+table|curriculum_sources|authenticated|insert|updated_at
+table|curriculum_sources|authenticated|insert|verified_at
+table|curriculum_sources|authenticated|insert|verified_by
+table|curriculum_sources|authenticated|maintain|-
+table|curriculum_sources|authenticated|references|-
+table|curriculum_sources|authenticated|select|-
+table|curriculum_sources|authenticated|select|created_at
+table|curriculum_sources|authenticated|select|edition
+table|curriculum_sources|authenticated|select|id
+table|curriculum_sources|authenticated|select|publisher
+table|curriculum_sources|authenticated|select|stage
+table|curriculum_sources|authenticated|select|status
+table|curriculum_sources|authenticated|select|subject
+table|curriculum_sources|authenticated|select|title
+table|curriculum_sources|authenticated|select|updated_at
+table|curriculum_sources|authenticated|select|verified_at
+table|curriculum_sources|authenticated|select|verified_by
+table|curriculum_sources|authenticated|trigger|-
+table|curriculum_sources|authenticated|truncate|-
+table|curriculum_sources|authenticated|update|-
+table|curriculum_sources|authenticated|update|created_at
+table|curriculum_sources|authenticated|update|edition
+table|curriculum_sources|authenticated|update|id
+table|curriculum_sources|authenticated|update|publisher
+table|curriculum_sources|authenticated|update|stage
+table|curriculum_sources|authenticated|update|status
+table|curriculum_sources|authenticated|update|subject
+table|curriculum_sources|authenticated|update|title
+table|curriculum_sources|authenticated|update|updated_at
+table|curriculum_sources|authenticated|update|verified_at
+table|curriculum_sources|authenticated|update|verified_by
+table|curriculum_sources|service_role|delete|-
+table|curriculum_sources|service_role|insert|-
+table|curriculum_sources|service_role|maintain|-
+table|curriculum_sources|service_role|references|-
+table|curriculum_sources|service_role|select|-
+table|curriculum_sources|service_role|trigger|-
+table|curriculum_sources|service_role|truncate|-
+table|curriculum_sources|service_role|update|-
+table|generation_runs|anon|delete|-
+table|generation_runs|anon|insert|-
+table|generation_runs|anon|maintain|-
+table|generation_runs|anon|references|-
+table|generation_runs|anon|select|-
+table|generation_runs|anon|trigger|-
+table|generation_runs|anon|truncate|-
+table|generation_runs|anon|update|-
+table|generation_runs|authenticated|delete|-
+table|generation_runs|authenticated|insert|-
+table|generation_runs|authenticated|insert|completed_at
+table|generation_runs|authenticated|insert|cost_actual
+table|generation_runs|authenticated|insert|cost_estimate
+table|generation_runs|authenticated|insert|created_at
+table|generation_runs|authenticated|insert|error_code
+table|generation_runs|authenticated|insert|id
+table|generation_runs|authenticated|insert|input_tokens
+table|generation_runs|authenticated|insert|latency_ms
+table|generation_runs|authenticated|insert|model
+table|generation_runs|authenticated|insert|output_tokens
+table|generation_runs|authenticated|insert|prompt_version
+table|generation_runs|authenticated|insert|provider
+table|generation_runs|authenticated|insert|status
+table|generation_runs|authenticated|insert|task_type
+table|generation_runs|authenticated|insert|user_id
+table|generation_runs|authenticated|maintain|-
+table|generation_runs|authenticated|references|-
+table|generation_runs|authenticated|select|-
+table|generation_runs|authenticated|select|completed_at
+table|generation_runs|authenticated|select|cost_actual
+table|generation_runs|authenticated|select|cost_estimate
+table|generation_runs|authenticated|select|created_at
+table|generation_runs|authenticated|select|error_code
+table|generation_runs|authenticated|select|id
+table|generation_runs|authenticated|select|input_tokens
+table|generation_runs|authenticated|select|latency_ms
+table|generation_runs|authenticated|select|model
+table|generation_runs|authenticated|select|output_tokens
+table|generation_runs|authenticated|select|prompt_version
+table|generation_runs|authenticated|select|provider
+table|generation_runs|authenticated|select|status
+table|generation_runs|authenticated|select|task_type
+table|generation_runs|authenticated|select|user_id
+table|generation_runs|authenticated|trigger|-
+table|generation_runs|authenticated|truncate|-
+table|generation_runs|authenticated|update|-
+table|generation_runs|authenticated|update|completed_at
+table|generation_runs|authenticated|update|cost_actual
+table|generation_runs|authenticated|update|cost_estimate
+table|generation_runs|authenticated|update|created_at
+table|generation_runs|authenticated|update|error_code
+table|generation_runs|authenticated|update|id
+table|generation_runs|authenticated|update|input_tokens
+table|generation_runs|authenticated|update|latency_ms
+table|generation_runs|authenticated|update|model
+table|generation_runs|authenticated|update|output_tokens
+table|generation_runs|authenticated|update|prompt_version
+table|generation_runs|authenticated|update|provider
+table|generation_runs|authenticated|update|status
+table|generation_runs|authenticated|update|task_type
+table|generation_runs|authenticated|update|user_id
+table|generation_runs|service_role|delete|-
+table|generation_runs|service_role|insert|-
+table|generation_runs|service_role|maintain|-
+table|generation_runs|service_role|references|-
+table|generation_runs|service_role|select|-
+table|generation_runs|service_role|trigger|-
+table|generation_runs|service_role|truncate|-
+table|generation_runs|service_role|update|-
+table|messages|anon|delete|-
+table|messages|anon|insert|-
+table|messages|anon|maintain|-
+table|messages|anon|references|-
+table|messages|anon|select|-
+table|messages|anon|trigger|-
+table|messages|anon|truncate|-
+table|messages|anon|update|-
+table|messages|authenticated|delete|-
+table|messages|authenticated|insert|-
+table|messages|authenticated|insert|content
+table|messages|authenticated|insert|conversation_id
+table|messages|authenticated|insert|created_at
+table|messages|authenticated|insert|generation_run_id
+table|messages|authenticated|insert|id
+table|messages|authenticated|insert|role
+table|messages|authenticated|insert|user_id
+table|messages|authenticated|maintain|-
+table|messages|authenticated|references|-
+table|messages|authenticated|select|-
+table|messages|authenticated|select|content
+table|messages|authenticated|select|conversation_id
+table|messages|authenticated|select|created_at
+table|messages|authenticated|select|generation_run_id
+table|messages|authenticated|select|id
+table|messages|authenticated|select|role
+table|messages|authenticated|select|user_id
+table|messages|authenticated|trigger|-
+table|messages|authenticated|truncate|-
+table|messages|authenticated|update|-
+table|messages|authenticated|update|content
+table|messages|authenticated|update|conversation_id
+table|messages|authenticated|update|created_at
+table|messages|authenticated|update|generation_run_id
+table|messages|authenticated|update|id
+table|messages|authenticated|update|role
+table|messages|authenticated|update|user_id
+table|messages|service_role|delete|-
+table|messages|service_role|insert|-
+table|messages|service_role|maintain|-
+table|messages|service_role|references|-
+table|messages|service_role|select|-
+table|messages|service_role|trigger|-
+table|messages|service_role|truncate|-
+table|messages|service_role|update|-
+table|profiles|anon|delete|-
+table|profiles|anon|insert|-
+table|profiles|anon|maintain|-
+table|profiles|anon|references|-
+table|profiles|anon|select|-
+table|profiles|anon|trigger|-
+table|profiles|anon|truncate|-
+table|profiles|anon|update|-
+table|profiles|authenticated|delete|-
+table|profiles|authenticated|insert|-
+table|profiles|authenticated|insert|avatar_url
+table|profiles|authenticated|insert|created_at
+table|profiles|authenticated|insert|email
+table|profiles|authenticated|insert|full_name
+table|profiles|authenticated|insert|grade
+table|profiles|authenticated|insert|id
+table|profiles|authenticated|insert|locale
+table|profiles|authenticated|insert|school_name
+table|profiles|authenticated|insert|stage
+table|profiles|authenticated|insert|subject
+table|profiles|authenticated|insert|updated_at
+table|profiles|authenticated|maintain|-
+table|profiles|authenticated|references|-
+table|profiles|authenticated|select|-
+table|profiles|authenticated|select|avatar_url
+table|profiles|authenticated|select|created_at
+table|profiles|authenticated|select|email
+table|profiles|authenticated|select|full_name
+table|profiles|authenticated|select|grade
+table|profiles|authenticated|select|id
+table|profiles|authenticated|select|locale
+table|profiles|authenticated|select|school_name
+table|profiles|authenticated|select|stage
+table|profiles|authenticated|select|subject
+table|profiles|authenticated|select|updated_at
+table|profiles|authenticated|trigger|-
+table|profiles|authenticated|truncate|-
+table|profiles|authenticated|update|-
+table|profiles|authenticated|update|avatar_url
+table|profiles|authenticated|update|created_at
+table|profiles|authenticated|update|email
+table|profiles|authenticated|update|full_name
+table|profiles|authenticated|update|grade
+table|profiles|authenticated|update|id
+table|profiles|authenticated|update|locale
+table|profiles|authenticated|update|school_name
+table|profiles|authenticated|update|stage
+table|profiles|authenticated|update|subject
+table|profiles|authenticated|update|updated_at
+table|profiles|service_role|delete|-
+table|profiles|service_role|insert|-
+table|profiles|service_role|maintain|-
+table|profiles|service_role|references|-
+table|profiles|service_role|select|-
+table|profiles|service_role|trigger|-
+table|profiles|service_role|truncate|-
+table|profiles|service_role|update|-
+table|project_item_versions|anon|delete|-
+table|project_item_versions|anon|insert|-
+table|project_item_versions|anon|maintain|-
+table|project_item_versions|anon|references|-
+table|project_item_versions|anon|select|-
+table|project_item_versions|anon|trigger|-
+table|project_item_versions|anon|truncate|-
+table|project_item_versions|anon|update|-
+table|project_item_versions|authenticated|delete|-
+table|project_item_versions|authenticated|insert|-
+table|project_item_versions|authenticated|insert|content
+table|project_item_versions|authenticated|insert|created_at
+table|project_item_versions|authenticated|insert|id
+table|project_item_versions|authenticated|insert|project_item_id
+table|project_item_versions|authenticated|insert|user_id
+table|project_item_versions|authenticated|insert|version_no
+table|project_item_versions|authenticated|maintain|-
+table|project_item_versions|authenticated|references|-
+table|project_item_versions|authenticated|select|-
+table|project_item_versions|authenticated|select|content
+table|project_item_versions|authenticated|select|created_at
+table|project_item_versions|authenticated|select|id
+table|project_item_versions|authenticated|select|project_item_id
+table|project_item_versions|authenticated|select|user_id
+table|project_item_versions|authenticated|select|version_no
+table|project_item_versions|authenticated|trigger|-
+table|project_item_versions|authenticated|truncate|-
+table|project_item_versions|authenticated|update|-
+table|project_item_versions|authenticated|update|content
+table|project_item_versions|authenticated|update|created_at
+table|project_item_versions|authenticated|update|id
+table|project_item_versions|authenticated|update|project_item_id
+table|project_item_versions|authenticated|update|user_id
+table|project_item_versions|authenticated|update|version_no
+table|project_item_versions|service_role|delete|-
+table|project_item_versions|service_role|insert|-
+table|project_item_versions|service_role|maintain|-
+table|project_item_versions|service_role|references|-
+table|project_item_versions|service_role|select|-
+table|project_item_versions|service_role|trigger|-
+table|project_item_versions|service_role|truncate|-
+table|project_item_versions|service_role|update|-
+table|project_items|anon|delete|-
+table|project_items|anon|insert|-
+table|project_items|anon|maintain|-
+table|project_items|anon|references|-
+table|project_items|anon|select|-
+table|project_items|anon|trigger|-
+table|project_items|anon|truncate|-
+table|project_items|anon|update|-
+table|project_items|authenticated|delete|-
+table|project_items|authenticated|insert|-
+table|project_items|authenticated|insert|content
+table|project_items|authenticated|insert|created_at
+table|project_items|authenticated|insert|id
+table|project_items|authenticated|insert|item_type
+table|project_items|authenticated|insert|position
+table|project_items|authenticated|insert|project_id
+table|project_items|authenticated|insert|updated_at
+table|project_items|authenticated|insert|user_id
+table|project_items|authenticated|maintain|-
+table|project_items|authenticated|references|-
+table|project_items|authenticated|select|-
+table|project_items|authenticated|select|content
+table|project_items|authenticated|select|created_at
+table|project_items|authenticated|select|id
+table|project_items|authenticated|select|item_type
+table|project_items|authenticated|select|position
+table|project_items|authenticated|select|project_id
+table|project_items|authenticated|select|updated_at
+table|project_items|authenticated|select|user_id
+table|project_items|authenticated|trigger|-
+table|project_items|authenticated|truncate|-
+table|project_items|authenticated|update|-
+table|project_items|authenticated|update|content
+table|project_items|authenticated|update|created_at
+table|project_items|authenticated|update|id
+table|project_items|authenticated|update|item_type
+table|project_items|authenticated|update|position
+table|project_items|authenticated|update|project_id
+table|project_items|authenticated|update|updated_at
+table|project_items|authenticated|update|user_id
+table|project_items|service_role|delete|-
+table|project_items|service_role|insert|-
+table|project_items|service_role|maintain|-
+table|project_items|service_role|references|-
+table|project_items|service_role|select|-
+table|project_items|service_role|trigger|-
+table|project_items|service_role|truncate|-
+table|project_items|service_role|update|-
+table|projects|anon|delete|-
+table|projects|anon|insert|-
+table|projects|anon|maintain|-
+table|projects|anon|references|-
+table|projects|anon|select|-
+table|projects|anon|trigger|-
+table|projects|anon|truncate|-
+table|projects|anon|update|-
+table|projects|authenticated|delete|-
+table|projects|authenticated|insert|-
+table|projects|authenticated|insert|created_at
+table|projects|authenticated|insert|grade
+table|projects|authenticated|insert|id
+table|projects|authenticated|insert|kind
+table|projects|authenticated|insert|stage
+table|projects|authenticated|insert|status
+table|projects|authenticated|insert|subject
+table|projects|authenticated|insert|term
+table|projects|authenticated|insert|title
+table|projects|authenticated|insert|updated_at
+table|projects|authenticated|insert|user_id
+table|projects|authenticated|maintain|-
+table|projects|authenticated|references|-
+table|projects|authenticated|select|-
+table|projects|authenticated|select|created_at
+table|projects|authenticated|select|grade
+table|projects|authenticated|select|id
+table|projects|authenticated|select|kind
+table|projects|authenticated|select|stage
+table|projects|authenticated|select|status
+table|projects|authenticated|select|subject
+table|projects|authenticated|select|term
+table|projects|authenticated|select|title
+table|projects|authenticated|select|updated_at
+table|projects|authenticated|select|user_id
+table|projects|authenticated|trigger|-
+table|projects|authenticated|truncate|-
+table|projects|authenticated|update|-
+table|projects|authenticated|update|created_at
+table|projects|authenticated|update|grade
+table|projects|authenticated|update|id
+table|projects|authenticated|update|kind
+table|projects|authenticated|update|stage
+table|projects|authenticated|update|status
+table|projects|authenticated|update|subject
+table|projects|authenticated|update|term
+table|projects|authenticated|update|title
+table|projects|authenticated|update|updated_at
+table|projects|authenticated|update|user_id
+table|projects|service_role|delete|-
+table|projects|service_role|insert|-
+table|projects|service_role|maintain|-
+table|projects|service_role|references|-
+table|projects|service_role|select|-
+table|projects|service_role|trigger|-
+table|projects|service_role|truncate|-
+table|projects|service_role|update|-
+table|student_alerts|authenticated|maintain|-
+table|student_alerts|authenticated|references|-
+table|student_alerts|authenticated|select|-
+table|student_alerts|authenticated|select|alert_type
+table|student_alerts|authenticated|select|assessment_count
+table|student_alerts|authenticated|select|basis_count
+table|student_alerts|authenticated|select|basis_kind
+table|student_alerts|authenticated|select|created_at
+table|student_alerts|authenticated|select|dedupe_key
+table|student_alerts|authenticated|select|dismissed_at
+table|student_alerts|authenticated|select|dismissed_reason
+table|student_alerts|authenticated|select|evidence
+table|student_alerts|authenticated|select|evidence_ids
+table|student_alerts|authenticated|select|generation_run_id
+table|student_alerts|authenticated|select|id
+table|student_alerts|authenticated|select|is_read
+table|student_alerts|authenticated|select|message
+table|student_alerts|authenticated|select|prompt_version
+table|student_alerts|authenticated|select|severity
+table|student_alerts|authenticated|select|snoozed_until
+table|student_alerts|authenticated|select|student_id
+table|student_alerts|authenticated|select|suggested_action
+table|student_alerts|authenticated|select|teacher_id
+table|student_alerts|authenticated|trigger|-
+table|student_alerts|authenticated|truncate|-
+table|student_alerts|authenticated|update|dismissed_at
+table|student_alerts|authenticated|update|dismissed_reason
+table|student_alerts|authenticated|update|is_read
+table|student_alerts|authenticated|update|snoozed_until
+table|student_alerts|service_role|delete|-
+table|student_alerts|service_role|insert|-
+table|student_alerts|service_role|insert|alert_type
+table|student_alerts|service_role|insert|assessment_count
+table|student_alerts|service_role|insert|basis_count
+table|student_alerts|service_role|insert|basis_kind
+table|student_alerts|service_role|insert|created_at
+table|student_alerts|service_role|insert|dedupe_key
+table|student_alerts|service_role|insert|dismissed_at
+table|student_alerts|service_role|insert|dismissed_reason
+table|student_alerts|service_role|insert|evidence
+table|student_alerts|service_role|insert|evidence_ids
+table|student_alerts|service_role|insert|generation_run_id
+table|student_alerts|service_role|insert|id
+table|student_alerts|service_role|insert|is_read
+table|student_alerts|service_role|insert|message
+table|student_alerts|service_role|insert|prompt_version
+table|student_alerts|service_role|insert|severity
+table|student_alerts|service_role|insert|snoozed_until
+table|student_alerts|service_role|insert|student_id
+table|student_alerts|service_role|insert|suggested_action
+table|student_alerts|service_role|insert|teacher_id
+table|student_alerts|service_role|maintain|-
+table|student_alerts|service_role|references|-
+table|student_alerts|service_role|select|-
+table|student_alerts|service_role|select|alert_type
+table|student_alerts|service_role|select|assessment_count
+table|student_alerts|service_role|select|basis_count
+table|student_alerts|service_role|select|basis_kind
+table|student_alerts|service_role|select|created_at
+table|student_alerts|service_role|select|dedupe_key
+table|student_alerts|service_role|select|dismissed_at
+table|student_alerts|service_role|select|dismissed_reason
+table|student_alerts|service_role|select|evidence
+table|student_alerts|service_role|select|evidence_ids
+table|student_alerts|service_role|select|generation_run_id
+table|student_alerts|service_role|select|id
+table|student_alerts|service_role|select|is_read
+table|student_alerts|service_role|select|message
+table|student_alerts|service_role|select|prompt_version
+table|student_alerts|service_role|select|severity
+table|student_alerts|service_role|select|snoozed_until
+table|student_alerts|service_role|select|student_id
+table|student_alerts|service_role|select|suggested_action
+table|student_alerts|service_role|select|teacher_id
+table|student_alerts|service_role|trigger|-
+table|student_alerts|service_role|truncate|-
+table|student_alerts|service_role|update|-
+table|student_alerts|service_role|update|alert_type
+table|student_alerts|service_role|update|assessment_count
+table|student_alerts|service_role|update|basis_count
+table|student_alerts|service_role|update|basis_kind
+table|student_alerts|service_role|update|created_at
+table|student_alerts|service_role|update|dedupe_key
+table|student_alerts|service_role|update|dismissed_at
+table|student_alerts|service_role|update|dismissed_reason
+table|student_alerts|service_role|update|evidence
+table|student_alerts|service_role|update|evidence_ids
+table|student_alerts|service_role|update|generation_run_id
+table|student_alerts|service_role|update|id
+table|student_alerts|service_role|update|is_read
+table|student_alerts|service_role|update|message
+table|student_alerts|service_role|update|prompt_version
+table|student_alerts|service_role|update|severity
+table|student_alerts|service_role|update|snoozed_until
+table|student_alerts|service_role|update|student_id
+table|student_alerts|service_role|update|suggested_action
+table|student_alerts|service_role|update|teacher_id
+table|student_grades|authenticated|delete|-
+table|student_grades|authenticated|maintain|-
+table|student_grades|authenticated|references|-
+table|student_grades|authenticated|select|-
+table|student_grades|authenticated|select|assessment_name
+table|student_grades|authenticated|select|created_at
+table|student_grades|authenticated|select|date
+table|student_grades|authenticated|select|id
+table|student_grades|authenticated|select|max_score
+table|student_grades|authenticated|select|score
+table|student_grades|authenticated|select|student_id
+table|student_grades|authenticated|select|subject
+table|student_grades|authenticated|select|teacher_id
+table|student_grades|authenticated|trigger|-
+table|student_grades|authenticated|truncate|-
+table|student_grades|authenticated|update|-
+table|student_grades|authenticated|update|assessment_name
+table|student_grades|authenticated|update|created_at
+table|student_grades|authenticated|update|date
+table|student_grades|authenticated|update|id
+table|student_grades|authenticated|update|max_score
+table|student_grades|authenticated|update|score
+table|student_grades|authenticated|update|student_id
+table|student_grades|authenticated|update|subject
+table|student_grades|authenticated|update|teacher_id
+table|student_grades|service_role|delete|-
+table|student_grades|service_role|insert|-
+table|student_grades|service_role|insert|assessment_name
+table|student_grades|service_role|insert|created_at
+table|student_grades|service_role|insert|date
+table|student_grades|service_role|insert|id
+table|student_grades|service_role|insert|max_score
+table|student_grades|service_role|insert|score
+table|student_grades|service_role|insert|student_id
+table|student_grades|service_role|insert|subject
+table|student_grades|service_role|insert|teacher_id
+table|student_grades|service_role|maintain|-
+table|student_grades|service_role|references|-
+table|student_grades|service_role|select|-
+table|student_grades|service_role|select|assessment_name
+table|student_grades|service_role|select|created_at
+table|student_grades|service_role|select|date
+table|student_grades|service_role|select|id
+table|student_grades|service_role|select|max_score
+table|student_grades|service_role|select|score
+table|student_grades|service_role|select|student_id
+table|student_grades|service_role|select|subject
+table|student_grades|service_role|select|teacher_id
+table|student_grades|service_role|trigger|-
+table|student_grades|service_role|truncate|-
+table|student_grades|service_role|update|-
+table|student_grades|service_role|update|assessment_name
+table|student_grades|service_role|update|created_at
+table|student_grades|service_role|update|date
+table|student_grades|service_role|update|id
+table|student_grades|service_role|update|max_score
+table|student_grades|service_role|update|score
+table|student_grades|service_role|update|student_id
+table|student_grades|service_role|update|subject
+table|student_grades|service_role|update|teacher_id
+table|student_interventions|authenticated|delete|-
+table|student_interventions|authenticated|insert|-
+table|student_interventions|authenticated|insert|action
+table|student_interventions|authenticated|insert|alert_id
+table|student_interventions|authenticated|insert|created_at
+table|student_interventions|authenticated|insert|id
+table|student_interventions|authenticated|insert|occurred_on
+table|student_interventions|authenticated|insert|student_id
+table|student_interventions|authenticated|insert|subject
+table|student_interventions|authenticated|insert|teacher_id
+table|student_interventions|authenticated|maintain|-
+table|student_interventions|authenticated|references|-
+table|student_interventions|authenticated|select|-
+table|student_interventions|authenticated|select|action
+table|student_interventions|authenticated|select|alert_id
+table|student_interventions|authenticated|select|created_at
+table|student_interventions|authenticated|select|id
+table|student_interventions|authenticated|select|occurred_on
+table|student_interventions|authenticated|select|student_id
+table|student_interventions|authenticated|select|subject
+table|student_interventions|authenticated|select|teacher_id
+table|student_interventions|authenticated|trigger|-
+table|student_interventions|authenticated|truncate|-
+table|student_interventions|authenticated|update|-
+table|student_interventions|authenticated|update|action
+table|student_interventions|authenticated|update|alert_id
+table|student_interventions|authenticated|update|created_at
+table|student_interventions|authenticated|update|id
+table|student_interventions|authenticated|update|occurred_on
+table|student_interventions|authenticated|update|student_id
+table|student_interventions|authenticated|update|subject
+table|student_interventions|authenticated|update|teacher_id
+table|student_interventions|service_role|delete|-
+table|student_interventions|service_role|insert|-
+table|student_interventions|service_role|insert|action
+table|student_interventions|service_role|insert|alert_id
+table|student_interventions|service_role|insert|created_at
+table|student_interventions|service_role|insert|id
+table|student_interventions|service_role|insert|occurred_on
+table|student_interventions|service_role|insert|student_id
+table|student_interventions|service_role|insert|subject
+table|student_interventions|service_role|insert|teacher_id
+table|student_interventions|service_role|maintain|-
+table|student_interventions|service_role|references|-
+table|student_interventions|service_role|select|-
+table|student_interventions|service_role|select|action
+table|student_interventions|service_role|select|alert_id
+table|student_interventions|service_role|select|created_at
+table|student_interventions|service_role|select|id
+table|student_interventions|service_role|select|occurred_on
+table|student_interventions|service_role|select|student_id
+table|student_interventions|service_role|select|subject
+table|student_interventions|service_role|select|teacher_id
+table|student_interventions|service_role|trigger|-
+table|student_interventions|service_role|truncate|-
+table|student_interventions|service_role|update|-
+table|student_interventions|service_role|update|action
+table|student_interventions|service_role|update|alert_id
+table|student_interventions|service_role|update|created_at
+table|student_interventions|service_role|update|id
+table|student_interventions|service_role|update|occurred_on
+table|student_interventions|service_role|update|student_id
+table|student_interventions|service_role|update|subject
+table|student_interventions|service_role|update|teacher_id
+table|student_submissions|authenticated|delete|-
+table|student_submissions|authenticated|insert|-
+table|student_submissions|authenticated|insert|created_at
+table|student_submissions|authenticated|insert|date
+table|student_submissions|authenticated|insert|feedback
+table|student_submissions|authenticated|insert|id
+table|student_submissions|authenticated|insert|project_name
+table|student_submissions|authenticated|insert|status
+table|student_submissions|authenticated|insert|student_id
+table|student_submissions|authenticated|insert|subject
+table|student_submissions|authenticated|insert|teacher_id
+table|student_submissions|authenticated|maintain|-
+table|student_submissions|authenticated|references|-
+table|student_submissions|authenticated|select|-
+table|student_submissions|authenticated|select|created_at
+table|student_submissions|authenticated|select|date
+table|student_submissions|authenticated|select|feedback
+table|student_submissions|authenticated|select|id
+table|student_submissions|authenticated|select|project_name
+table|student_submissions|authenticated|select|status
+table|student_submissions|authenticated|select|student_id
+table|student_submissions|authenticated|select|subject
+table|student_submissions|authenticated|select|teacher_id
+table|student_submissions|authenticated|trigger|-
+table|student_submissions|authenticated|truncate|-
+table|student_submissions|authenticated|update|-
+table|student_submissions|authenticated|update|created_at
+table|student_submissions|authenticated|update|date
+table|student_submissions|authenticated|update|feedback
+table|student_submissions|authenticated|update|id
+table|student_submissions|authenticated|update|project_name
+table|student_submissions|authenticated|update|status
+table|student_submissions|authenticated|update|student_id
+table|student_submissions|authenticated|update|subject
+table|student_submissions|authenticated|update|teacher_id
+table|student_submissions|service_role|delete|-
+table|student_submissions|service_role|insert|-
+table|student_submissions|service_role|insert|created_at
+table|student_submissions|service_role|insert|date
+table|student_submissions|service_role|insert|feedback
+table|student_submissions|service_role|insert|id
+table|student_submissions|service_role|insert|project_name
+table|student_submissions|service_role|insert|status
+table|student_submissions|service_role|insert|student_id
+table|student_submissions|service_role|insert|subject
+table|student_submissions|service_role|insert|teacher_id
+table|student_submissions|service_role|maintain|-
+table|student_submissions|service_role|references|-
+table|student_submissions|service_role|select|-
+table|student_submissions|service_role|select|created_at
+table|student_submissions|service_role|select|date
+table|student_submissions|service_role|select|feedback
+table|student_submissions|service_role|select|id
+table|student_submissions|service_role|select|project_name
+table|student_submissions|service_role|select|status
+table|student_submissions|service_role|select|student_id
+table|student_submissions|service_role|select|subject
+table|student_submissions|service_role|select|teacher_id
+table|student_submissions|service_role|trigger|-
+table|student_submissions|service_role|truncate|-
+table|student_submissions|service_role|update|-
+table|student_submissions|service_role|update|created_at
+table|student_submissions|service_role|update|date
+table|student_submissions|service_role|update|feedback
+table|student_submissions|service_role|update|id
+table|student_submissions|service_role|update|project_name
+table|student_submissions|service_role|update|status
+table|student_submissions|service_role|update|student_id
+table|student_submissions|service_role|update|subject
+table|student_submissions|service_role|update|teacher_id
+table|students|authenticated|insert|-
+table|students|authenticated|insert|class_label
+table|students|authenticated|insert|created_at
+table|students|authenticated|insert|deleted_at
+table|students|authenticated|insert|grade_level
+table|students|authenticated|insert|id
+table|students|authenticated|insert|name
+table|students|authenticated|insert|teacher_id
+table|students|authenticated|insert|updated_at
+table|students|authenticated|maintain|-
+table|students|authenticated|references|-
+table|students|authenticated|select|-
+table|students|authenticated|select|class_label
+table|students|authenticated|select|created_at
+table|students|authenticated|select|deleted_at
+table|students|authenticated|select|grade_level
+table|students|authenticated|select|id
+table|students|authenticated|select|name
+table|students|authenticated|select|teacher_id
+table|students|authenticated|select|updated_at
+table|students|authenticated|trigger|-
+table|students|authenticated|truncate|-
+table|students|authenticated|update|class_label
+table|students|authenticated|update|grade_level
+table|students|authenticated|update|name
+table|students|service_role|delete|-
+table|students|service_role|insert|-
+table|students|service_role|insert|class_label
+table|students|service_role|insert|created_at
+table|students|service_role|insert|deleted_at
+table|students|service_role|insert|grade_level
+table|students|service_role|insert|id
+table|students|service_role|insert|name
+table|students|service_role|insert|teacher_id
+table|students|service_role|insert|updated_at
+table|students|service_role|maintain|-
+table|students|service_role|references|-
+table|students|service_role|select|-
+table|students|service_role|select|class_label
+table|students|service_role|select|created_at
+table|students|service_role|select|deleted_at
+table|students|service_role|select|grade_level
+table|students|service_role|select|id
+table|students|service_role|select|name
+table|students|service_role|select|teacher_id
+table|students|service_role|select|updated_at
+table|students|service_role|trigger|-
+table|students|service_role|truncate|-
+table|students|service_role|update|-
+table|students|service_role|update|class_label
+table|students|service_role|update|created_at
+table|students|service_role|update|deleted_at
+table|students|service_role|update|grade_level
+table|students|service_role|update|id
+table|students|service_role|update|name
+table|students|service_role|update|teacher_id
+table|students|service_role|update|updated_at
+table|teacher_alert_settings|authenticated|delete|-
+table|teacher_alert_settings|authenticated|insert|-
+table|teacher_alert_settings|authenticated|insert|drop_threshold_pct
+table|teacher_alert_settings|authenticated|insert|missing_work_alerts
+table|teacher_alert_settings|authenticated|insert|teacher_id
+table|teacher_alert_settings|authenticated|insert|updated_at
+table|teacher_alert_settings|authenticated|maintain|-
+table|teacher_alert_settings|authenticated|references|-
+table|teacher_alert_settings|authenticated|select|-
+table|teacher_alert_settings|authenticated|select|drop_threshold_pct
+table|teacher_alert_settings|authenticated|select|missing_work_alerts
+table|teacher_alert_settings|authenticated|select|teacher_id
+table|teacher_alert_settings|authenticated|select|updated_at
+table|teacher_alert_settings|authenticated|trigger|-
+table|teacher_alert_settings|authenticated|truncate|-
+table|teacher_alert_settings|authenticated|update|-
+table|teacher_alert_settings|authenticated|update|drop_threshold_pct
+table|teacher_alert_settings|authenticated|update|missing_work_alerts
+table|teacher_alert_settings|service_role|delete|-
+table|teacher_alert_settings|service_role|insert|-
+table|teacher_alert_settings|service_role|insert|drop_threshold_pct
+table|teacher_alert_settings|service_role|insert|missing_work_alerts
+table|teacher_alert_settings|service_role|insert|teacher_id
+table|teacher_alert_settings|service_role|insert|updated_at
+table|teacher_alert_settings|service_role|maintain|-
+table|teacher_alert_settings|service_role|references|-
+table|teacher_alert_settings|service_role|select|-
+table|teacher_alert_settings|service_role|select|drop_threshold_pct
+table|teacher_alert_settings|service_role|select|missing_work_alerts
+table|teacher_alert_settings|service_role|select|teacher_id
+table|teacher_alert_settings|service_role|select|updated_at
+table|teacher_alert_settings|service_role|trigger|-
+table|teacher_alert_settings|service_role|truncate|-
+table|teacher_alert_settings|service_role|update|-
+table|teacher_alert_settings|service_role|update|drop_threshold_pct
+table|teacher_alert_settings|service_role|update|missing_work_alerts
+table|teacher_alert_settings|service_role|update|teacher_id
+table|teacher_alert_settings|service_role|update|updated_at
+table|teacher_preferences|anon|delete|-
+table|teacher_preferences|anon|insert|-
+table|teacher_preferences|anon|maintain|-
+table|teacher_preferences|anon|references|-
+table|teacher_preferences|anon|select|-
+table|teacher_preferences|anon|trigger|-
+table|teacher_preferences|anon|truncate|-
+table|teacher_preferences|anon|update|-
+table|teacher_preferences|authenticated|delete|-
+table|teacher_preferences|authenticated|insert|-
+table|teacher_preferences|authenticated|insert|content_locale
+table|teacher_preferences|authenticated|insert|created_at
+table|teacher_preferences|authenticated|insert|digit_style
+table|teacher_preferences|authenticated|insert|explanation_style
+table|teacher_preferences|authenticated|insert|ui_locale
+table|teacher_preferences|authenticated|insert|updated_at
+table|teacher_preferences|authenticated|insert|user_id
+table|teacher_preferences|authenticated|maintain|-
+table|teacher_preferences|authenticated|references|-
+table|teacher_preferences|authenticated|select|-
+table|teacher_preferences|authenticated|select|content_locale
+table|teacher_preferences|authenticated|select|created_at
+table|teacher_preferences|authenticated|select|digit_style
+table|teacher_preferences|authenticated|select|explanation_style
+table|teacher_preferences|authenticated|select|ui_locale
+table|teacher_preferences|authenticated|select|updated_at
+table|teacher_preferences|authenticated|select|user_id
+table|teacher_preferences|authenticated|trigger|-
+table|teacher_preferences|authenticated|truncate|-
+table|teacher_preferences|authenticated|update|-
+table|teacher_preferences|authenticated|update|content_locale
+table|teacher_preferences|authenticated|update|created_at
+table|teacher_preferences|authenticated|update|digit_style
+table|teacher_preferences|authenticated|update|explanation_style
+table|teacher_preferences|authenticated|update|ui_locale
+table|teacher_preferences|authenticated|update|updated_at
+table|teacher_preferences|authenticated|update|user_id
+table|teacher_preferences|service_role|delete|-
+table|teacher_preferences|service_role|insert|-
+table|teacher_preferences|service_role|maintain|-
+table|teacher_preferences|service_role|references|-
+table|teacher_preferences|service_role|select|-
+table|teacher_preferences|service_role|trigger|-
+table|teacher_preferences|service_role|truncate|-
+table|teacher_preferences|service_role|update|-
+table|usage_quotas|anon|delete|-
+table|usage_quotas|anon|insert|-
+table|usage_quotas|anon|maintain|-
+table|usage_quotas|anon|references|-
+table|usage_quotas|anon|select|-
+table|usage_quotas|anon|trigger|-
+table|usage_quotas|anon|truncate|-
+table|usage_quotas|anon|update|-
+table|usage_quotas|authenticated|delete|-
+table|usage_quotas|authenticated|insert|-
+table|usage_quotas|authenticated|insert|period_start
+table|usage_quotas|authenticated|insert|runs_limit
+table|usage_quotas|authenticated|insert|runs_used
+table|usage_quotas|authenticated|insert|tokens_limit
+table|usage_quotas|authenticated|insert|tokens_used
+table|usage_quotas|authenticated|insert|updated_at
+table|usage_quotas|authenticated|insert|user_id
+table|usage_quotas|authenticated|maintain|-
+table|usage_quotas|authenticated|references|-
+table|usage_quotas|authenticated|select|-
+table|usage_quotas|authenticated|select|period_start
+table|usage_quotas|authenticated|select|runs_limit
+table|usage_quotas|authenticated|select|runs_used
+table|usage_quotas|authenticated|select|tokens_limit
+table|usage_quotas|authenticated|select|tokens_used
+table|usage_quotas|authenticated|select|updated_at
+table|usage_quotas|authenticated|select|user_id
+table|usage_quotas|authenticated|trigger|-
+table|usage_quotas|authenticated|truncate|-
+table|usage_quotas|authenticated|update|-
+table|usage_quotas|authenticated|update|period_start
+table|usage_quotas|authenticated|update|runs_limit
+table|usage_quotas|authenticated|update|runs_used
+table|usage_quotas|authenticated|update|tokens_limit
+table|usage_quotas|authenticated|update|tokens_used
+table|usage_quotas|authenticated|update|updated_at
+table|usage_quotas|authenticated|update|user_id
+table|usage_quotas|service_role|delete|-
+table|usage_quotas|service_role|insert|-
+table|usage_quotas|service_role|maintain|-
+table|usage_quotas|service_role|references|-
+table|usage_quotas|service_role|select|-
+table|usage_quotas|service_role|trigger|-
+table|usage_quotas|service_role|truncate|-
+table|usage_quotas|service_role|update|-
+table|user_roles|anon|delete|-
+table|user_roles|anon|insert|-
+table|user_roles|anon|maintain|-
+table|user_roles|anon|references|-
+table|user_roles|anon|select|-
+table|user_roles|anon|trigger|-
+table|user_roles|anon|truncate|-
+table|user_roles|anon|update|-
+table|user_roles|authenticated|delete|-
+table|user_roles|authenticated|insert|-
+table|user_roles|authenticated|maintain|-
+table|user_roles|authenticated|references|-
+table|user_roles|authenticated|select|-
+table|user_roles|authenticated|select|granted_at
+table|user_roles|authenticated|select|granted_by
+table|user_roles|authenticated|select|id
+table|user_roles|authenticated|select|role
+table|user_roles|authenticated|select|user_id
+table|user_roles|authenticated|trigger|-
+table|user_roles|authenticated|truncate|-
+table|user_roles|authenticated|update|-
+table|user_roles|service_role|delete|-
+table|user_roles|service_role|insert|-
+table|user_roles|service_role|maintain|-
+table|user_roles|service_role|references|-
+table|user_roles|service_role|select|-
+table|user_roles|service_role|trigger|-
+table|user_roles|service_role|truncate|-
+table|user_roles|service_role|update|-
