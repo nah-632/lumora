@@ -47,4 +47,14 @@ mkdir -p build-test
   --bundle --format=esm --platform=node --alias:@=./src \
   --outfile=build-test/limit.mjs --log-level=warning
 
+# Language detection and the MCQ validator. Pure functions over strings and
+# parsed payloads — no provider, no environment.
+"$ESBUILD" src/lib/ai/language.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/language.mjs --log-level=warning
+
+"$ESBUILD" src/lib/ai/validate.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/validate.mjs --log-level=warning
+
 echo "build-test OK"

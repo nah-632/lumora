@@ -28,6 +28,12 @@ import {
   type OutputLanguage,
   type ToolId,
 } from "./tools";
+import { checkLanguage, collectText, describeLanguageIssue } from "./language";
+import {
+  describeQuestionIssues,
+  validateAnswerAlignment,
+  validateQuestions,
+} from "./validate";
 
 /* -------------------------------------------------------------------------- */
 /* Error codes                                                                */
@@ -516,15 +522,25 @@ export async function generate(args: GenerateArgs): Promise<GenerateResult> {
   let attempts = 0;
   let truncatedRetry = false;
   let repairSummary: string | null = null;
+  let languageRetryUsed = false;
+  /** True while the pending repair is a language rewrite rather than a structure fix. */
+  let pendingLanguageRepair = false;
 
   while (attempts < MAX_ATTEMPTS) {
     attempts += 1;
 
-    // On the repair attempt the summary is appended as a second, clearly
-    // separated instruction. It is built only from paths and shapes.
-    const user = repairSummary
-      ? `${prompt.user}\n\nThe previous response could not be used. Fix ONLY the structural problems listed below and return the complete JSON again.\nStructure problems: ${repairSummary}`
-      : prompt.user;
+    // On a retry, the summary is appended as a second, clearly separated
+    // instruction. It is built only from paths, shapes and measurements — never
+    // from user text or the model's own output.
+    //
+    // The wording differs by retry kind: a language mismatch needs a rewrite
+    // instruction, not a structural one, or the model is told to "fix the
+    // structure" of a response whose structure is already correct.
+    const user = !repairSummary
+      ? prompt.user
+      : languageRetryUsed && pendingLanguageRepair
+        ? `${prompt.user}\n\nThe previous response was written in the wrong language. ${repairSummary}\nKeep the same JSON structure and the same content; change only the language of the prose.`
+        : `${prompt.user}\n\nThe previous response could not be used. Fix ONLY the structural problems listed below and return the complete JSON again.\nStructure problems: ${repairSummary}`;
 
     let raw: string;
     let providerTruncated: boolean;
@@ -577,24 +593,64 @@ export async function generate(args: GenerateArgs): Promise<GenerateResult> {
 
     // --- Validate against the registry output schema. ----------------------
     const validated = tool.outputSchema.safeParse(parsed);
-    if (validated.success) {
-      const latencyMs = Math.max(0, now() - startedAt);
-      logger.warn({ code: "ok", toolId, status: 200, latencyMs, attempts });
-      return {
-        ok: true,
-        status: 200,
-        data: validated.data,
-        meta: { attempts, latencyMs, truncatedRetry },
-      };
+    if (!validated.success) {
+      if (!repairSummary) {
+        repairSummary = summariseIssues(validated.error);
+        logger.warn({ code: "repair_retry", toolId, status: 200 });
+        continue;
+      }
+      return fail("ai_output_invalid", attempts, startedAt, now, logger, toolId);
     }
 
-    if (!repairSummary) {
-      repairSummary = summariseIssues(validated.error);
-      logger.warn({ code: "repair_retry", toolId, status: 200 });
-      continue;
+    // --- Cross-field checks the schema cannot express. ----------------------
+    // For a question set that means: four options, one of them correct, the
+    // options actually distinct, and the answer agreeing with the marked option.
+    // These are relationships between fields, so they live in validate.ts.
+    if (toolId === "questions") {
+      const structural = validateQuestions(validated.data, {
+        count: Number(options.count),
+        types: options.questionTypes as string[],
+      });
+      const alignment = structural.ok ? validateAnswerAlignment(validated.data) : { ok: true, issues: [] };
+
+      if (!structural.ok || !alignment.ok) {
+        if (!repairSummary) {
+          repairSummary = describeQuestionIssues([...structural.issues, ...alignment.issues]);
+          logger.warn({ code: "repair_retry", toolId, status: 200 });
+          continue;
+        }
+        return fail("ai_output_invalid", attempts, startedAt, now, logger, toolId);
+      }
     }
 
-    return fail("ai_output_invalid", attempts, startedAt, now, logger, toolId);
+    // --- Language check. ----------------------------------------------------
+    // Last, because it is the most expensive to act on: a mismatch costs a
+    // second provider call, so it only runs once the payload is structurally
+    // sound and worth rewriting.
+    const expected = options.outputLanguage as OutputLanguage;
+    const language = checkLanguage(collectText(validated.data).join("\n"), expected);
+
+    if (language.verdict === "mismatch") {
+      if (!languageRetryUsed) {
+        languageRetryUsed = true;
+        pendingLanguageRepair = true;
+        // The repair prompt is language-specific and value-free: it names the
+        // target language and the measurement, never the text itself.
+        repairSummary = describeLanguageIssue(language, expected);
+        logger.warn({ code: "language_retry", toolId, status: 200 });
+        continue;
+      }
+      return fail("ai_output_invalid", attempts, startedAt, now, logger, toolId);
+    }
+
+    const latencyMs = Math.max(0, now() - startedAt);
+    logger.warn({ code: "ok", toolId, status: 200, latencyMs, attempts });
+    return {
+      ok: true,
+      status: 200,
+      data: validated.data,
+      meta: { attempts, latencyMs, truncatedRetry },
+    };
   }
 
   return fail("ai_output_invalid", attempts, startedAt, now, logger, toolId);

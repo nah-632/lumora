@@ -200,7 +200,9 @@ test("looksTruncated: detects an unbalanced response and an unterminated string"
 test("truncation: questions retries once with count - 5 and a smaller budget", async () => {
   const generator = scriptedGenerator([
     '{"questions":[{"type":"short","prompt":"q1","options":[],"correctIndex":0,"answer":"a"},{"type":"short","prompt":"q2',
-    VALID_QUESTIONS(5),
+    // The retry asks for 10 (15 - 5), so the recovery response must honour that
+    // count: the whole-set validator now rejects a set that is short.
+    VALID_QUESTIONS(10),
   ]);
   const logger = capturingLogger();
   const result = await generate({
