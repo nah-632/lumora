@@ -60,6 +60,13 @@ export function isConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
  * pointed at it by baseURL rather than a bespoke provider being written.
  *
  * Returns null when unconfigured — callers must handle it rather than catching.
+ *
+ * `apiKey` is returned alongside the model handle because the route issues its
+ * own request rather than going through `generateText`: the routers in play can
+ * report a refusal as an error body on an HTTP 200, and the only way to see that
+ * body before the SDK flattens it into "Invalid JSON response" is to make the
+ * call directly. The key is never logged, never returned to a client, and this
+ * module is server-only.
  */
 export function resolveProvider(env: NodeJS.ProcessEnv = process.env) {
   const config = resolveConfig(env);
@@ -70,5 +77,10 @@ export function resolveProvider(env: NodeJS.ProcessEnv = process.env) {
     apiKey: config.apiKey,
   });
 
-  return { model: client(config.model), modelId: config.model, baseURL: config.baseURL };
+  return {
+    model: client(config.model),
+    modelId: config.model,
+    baseURL: config.baseURL,
+    apiKey: config.apiKey,
+  };
 }

@@ -186,7 +186,30 @@ is ever present.
 
 ---
 
-## 7. Bilingual behaviour
+## 7. Provider refusals, and the HTTP 200 hazard
+
+The router reports several refusals as an error body on a **successful** status,
+which the `@ai-sdk/openai` client flattens to the opaque `Invalid JSON response`.
+That message points at the prompt when the real cause is the account.
+
+`src/lib/ai/provider-errors.ts` classifies every response **body** before the
+status is trusted, and the route issues its own guarded request rather than going
+through `generateText` — inspecting the body is only possible if we make the call.
+
+| Code | Meaning | Route mapping |
+|---|---|---|
+| `provider_credits_exhausted` | the account has no balance | 503 `provider_unavailable` |
+| `provider_model_not_supported` | no enabled provider serves that model | 503 `provider_unavailable` |
+| `provider_unauthorized` | key missing or rejected | 503 `ai_not_configured` |
+| `provider_rate_limited` | provider-side throttle | 429 `rate_limited` |
+| `provider_bad_response` | an identified failure, or a body that is not a completion | 503 `provider_unavailable` |
+
+The provider's own wording is **never** forwarded to the client and never logged —
+only a code from a fixed union. A body with no `choices` array is not treated as a
+completion regardless of the status code. Tests cover the real observed bodies,
+hostile inputs that must not throw, and the no-leak guarantee.
+
+## 8. Bilingual behaviour
 
 `outputLanguage` is a field of the request, not a property of the interface. The
 prompt variant follows it; so does the `dir` and `lang` of the result container.
@@ -255,25 +278,38 @@ travel with the code.
    finished work. `scripts/eval-ai.mjs` collects those samples; it does not judge
    them.
 
-   **It has not yet collected any.** On 2026-10-28 the configured provider account
-   returned:
+   **It has not yet collected any.** Verified on 2026-10-28 against the configured
+   account:
 
-   > `402 "You have no remaining credits. Purchase pre-paid credits to continue
-   > using Inference Providers."`
+   ```
+   GET /api/whoami-v2  →  {"name":"Lumora-6666","canPay":false,
+                           "billingMode":"prepaid","isPro":false}
+   ```
 
-   The router answers this refusal with an error *body* on an HTTP 200, which the
-   SDK reports as `Invalid JSON response` — a message that sends you looking for a
-   prompt bug. `classifyProviderError()` now recognises the shape and returns
-   `provider_unavailable` (503) with its own message, so the teacher is told the
-   service is unavailable rather than told to try again. **No generation has
-   succeeded end to end against a live provider**, so the only evidence that the
-   pipeline works is the test suite: 172 unit and integration tests exercising
-   every branch with an injected generator. That is real coverage of the logic and
-   no evidence at all about output quality. Both facts belong here.
+   The account is on **prepaid billing with a zero balance and no PRO
+   subscription**, and every model the router will serve this token is a billed
+   provider:
 
-   Before this feature is offered to teachers, someone must fund the account (or
-   point `AI_BASE_URL` at a self-hosted model), run `scripts/eval-ai.mjs`, and read
-   the drafts.
+   - `GET /v1/models` lists 137 models, **none** with `is_free: true`.
+   - The two models commonly suggested as free (`meta-llama/Llama-3.2-3B-Instruct`,
+     `Qwen/Qwen2.5-7B-Instruct`) return `model_not_supported` — they are not routed
+     to any provider this account has enabled, so they are not a workaround.
+   - A routable model (`Qwen/Qwen3.5-9B`) returns the 402 refusal.
+   - `api-inference.huggingface.co`, the retired free serverless endpoint, no
+     longer resolves at all.
+
+   So there is **no free path on this token**, and no generation has succeeded end
+   to end. The only evidence that the pipeline works is the test suite: 198 unit
+   and integration tests exercising every branch with an injected generator. That
+   is real coverage of the logic and no evidence at all about output quality. Both
+   facts belong here.
+
+   **Unblocking it needs one of:** (a) credits on this account, (b) a PRO
+   subscription, (c) a key for another OpenAI-compatible endpoint (OpenRouter and
+   its `:free` tier would work — `AI_BASE_URL=https://openrouter.ai/api/v1` plus
+   `OPENROUTER_API_KEY`, which the gateway accepts as `AI_API_KEY`), or (d) a
+   self-hosted model behind an OpenAI-compatible URL. The gateway is already fully
+   env-driven, so any of these is a configuration change and no code change.
 
 6. **The default model is not served by the configured account.** `AI_MODEL`
    defaults to `tiiuae/Falcon-H1-3B-Instruct`, which returns

@@ -138,14 +138,16 @@ test("generate: an unknown tool id is invalid_input, and the provider is never c
   assert.equal(generator.calls.length, 0, "no provider call for an unknown tool");
 });
 
-test("generate: a missing provider key surfaces as ai_not_configured (503)", async () => {
+test("generate: a provider that rejects its own key reports ai_not_configured", async () => {
   const args = baseArgs({
     generator: scriptedGenerator([]),
     // The route returns this code itself when resolveProvider() is null; here we
     // assert the status contract the client depends on.
   });
   assert.equal(ERROR_STATUS.ai_not_configured, 503);
-  // And a provider that throws because it is unconfigured must not leak.
+  // And a provider that throws because it is unconfigured must not leak its key.
+  // The code is `ai_not_configured`, not `failed`: a rejected key is an operator
+  // problem, and telling the teacher to "try again" would be wrong.
   const throwing = {
     generate: async () => {
       throw new Error("AI provider is not configured: missing AI_API_KEY=sk-test-LEAKY");
@@ -153,8 +155,8 @@ test("generate: a missing provider key surfaces as ai_not_configured (503)", asy
   };
   const result = await generate({ ...args, generator: throwing });
   assert.equal(result.ok, false);
-  assert.equal(result.code, "failed");
-  assert.equal(result.status, 502);
+  assert.equal(result.code, "ai_not_configured");
+  assert.equal(result.status, 503);
 });
 
 /* -------------------------------------------------------------------------- */
@@ -655,7 +657,9 @@ test("logs: a provider error message is never logged", async () => {
   const logger = capturingLogger();
   const result = await generate(baseArgs({ generator, logger }));
 
-  assert.equal(result.code, "failed");
+  // A rejected key is now classified as a configuration problem rather than a
+  // generic failure, which is more useful to whoever operates the deployment.
+  assert.equal(result.code, "ai_not_configured");
   assert.equal(logger.text().includes("sk-LEAKED"), false);
   assert.equal(logger.text().includes("401"), false);
   assert.equal(logger.text().includes("secret"), false);
@@ -725,11 +729,15 @@ test("provider errors: a rate limit is reported as rate_limited", () => {
   assert.equal(classifyProviderError(new Error("rate limit exceeded")), "rate_limited");
 });
 
-test("provider errors: anything unrecognised stays a generic failure", () => {
-  assert.equal(classifyProviderError(new Error("socket hang up")), "failed");
-  assert.equal(classifyProviderError(new Error("")), "failed");
-  assert.equal(classifyProviderError(null), "failed");
-  assert.equal(classifyProviderError(undefined), "failed");
+test("provider errors: an unidentifiable failure is reported as a bad response, not a guess", () => {
+  // `provider_bad_response` maps to provider_unavailable, which is an honest "the
+  // service cannot serve this right now". It is never misreported as a credit
+  // problem, because that would send an operator to the billing page for a
+  // network blip.
+  assert.equal(classifyProviderError(new Error("socket hang up")), "provider_unavailable");
+  assert.equal(classifyProviderError(new Error("")), "provider_unavailable");
+  assert.equal(classifyProviderError(null), "provider_unavailable");
+  assert.equal(classifyProviderError(undefined), "provider_unavailable");
 });
 
 test("provider errors: a classified refusal maps to 503, not 502", () => {

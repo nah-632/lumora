@@ -20,7 +20,7 @@
 
 import { NextResponse } from "next/server";
 import { requireUser } from "@/server/supabase";
-import { resolveConfig, resolveProvider } from "@/lib/ai/gateway";
+import { resolveProvider } from "@/lib/ai/gateway";
 import {
   ERROR_STATUS,
   generate,
@@ -31,6 +31,7 @@ import {
 } from "@/lib/ai/generate";
 import { getRateLimiter, serverLogger } from "@/lib/ai/limit";
 import { isToolId } from "@/lib/ai/tools";
+import { ProviderError, classifyResponseBody } from "@/lib/ai/provider-errors";
 
 export const runtime = "nodejs";
 /** Generation is per-request and user-scoped; nothing about it is cacheable. */
@@ -77,7 +78,7 @@ export async function POST(req: Request, context: { params: { toolId: string } }
   }
 
   // 4. Generate. Rate limiting happens inside, before the first provider call.
-  const generator = sdkGenerator(provider.model);
+  const generator = httpGenerator(provider);
   const result = await generate({
     toolId,
     options,
@@ -122,30 +123,88 @@ function json(payload: unknown, status: number, headers: Record<string, string> 
  * Adapts the SDK model handle to the narrow `TextGenerator` interface.
  *
  * The gateway has already resolved and validated the provider by this point, so
- * the model handle is passed in rather than re-resolved per call. Keeping the
- * adaptation here means the pipeline has no import of `ai` and can be tested with
- * a plain object.
+ * the model handle is passed in rather than re-resolved per call.
  *
- * Uses `generateText` rather than `generateObject`: the router serves many models
- * and structured-output mode is not reliably supported across all of them, so we
- * ask for JSON in the prompt and validate the result ourselves. That is the same
- * contract either way — the registry schema is the authority.
+ * WHY THIS IS NOT A ONE-LINE WRAPPER: OpenAI-compatible routers do not all report
+ * failures honestly. Hugging Face's router answers an exhausted account or an
+ * unroutable model with an **error body on an HTTP 200**, and the SDK turns that
+ * into the opaque `Invalid JSON response`. That message points at the prompt when
+ * the real cause is the account. So two guards are applied, in order:
+ *
+ *   1. A raw `fetch` is used instead of `generateText`. That is the only way to
+ *      see the response body before the SDK decides it is unparseable.
+ *   2. Every body is classified BEFORE being read as a completion — with
+ *      classifyResponseBody — and a refusal is thrown as a ProviderError carrying
+ *      an exact code.
+ *
+ * Uses a hand-rolled request rather than `generateObject` for the same reason the
+ * pipeline validates its own output: structured-output mode is not supported
+ * across every model this router serves, so JSON is requested in the prompt and
+ * validated by the registry schema.
  */
-function sdkGenerator(model: NonNullable<ReturnType<typeof resolveProvider>>["model"]): TextGenerator {
+function httpGenerator(
+  provider: NonNullable<ReturnType<typeof resolveProvider>>,
+): TextGenerator {
   return {
     async generate({ system, user, maxOutputTokens }) {
-      const { generateText } = await import("ai");
-      const result = await generateText({
-        model,
-        system,
-        prompt: user,
-        maxOutputTokens,
-      });
+      const endpoint = `${provider.baseURL.replace(/\/+$/, "")}/chat/completions`;
 
-      // `finishReason` is not always sent by the router; the pipeline also
-      // inspects the text itself, so a missing reason is not a blind spot.
-      const finishReason = (result as { finishReason?: string }).finishReason;
-      return { text: result.text, truncated: finishReason === "length" };
+      let response: Response;
+      try {
+        response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${provider.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: provider.modelId,
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: user },
+            ],
+            max_tokens: maxOutputTokens,
+            temperature: 0.4,
+          }),
+          // A generation can legitimately take a while on a busy provider, but
+          // not forever. Without this a hung request holds a slot and the
+          // teacher waits with no way to tell the difference from slow work.
+          signal: AbortSignal.timeout(90_000),
+        });
+      } catch {
+        // A transport failure. No body to inspect, so it is a generic outage.
+        throw new ProviderError("provider_bad_response");
+      }
+
+      const rawBody = await response.text().catch(() => "");
+
+      // The refusal check runs FIRST, and independently of the status code,
+      // because a 200 with an error body is exactly the case that misleads.
+      const refusal = classifyResponseBody(rawBody, response.status);
+      if (refusal) {
+        throw new ProviderError(refusal, response.status);
+      }
+
+      if (!response.ok) {
+        throw new ProviderError("provider_bad_response", response.status);
+      }
+
+      let body: unknown;
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        throw new ProviderError("provider_bad_response", response.status);
+      }
+
+      const choice = (body as { choices?: Array<{ message?: { content?: unknown } }> }).choices?.[0];
+      const content = choice?.message?.content;
+      if (typeof content !== "string" || content.trim() === "") {
+        // A completion with no text is not usable, and not a schema problem.
+        throw new ProviderError("provider_bad_response", response.status);
+      }
+
+      const finishReason = (choice as { finish_reason?: string } | undefined)?.finish_reason;
+      return { text: content, truncated: finishReason === "length" };
     },
   };
 }

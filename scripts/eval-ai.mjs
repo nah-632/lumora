@@ -419,46 +419,70 @@ async function retryWithNote(config, prompt, maxOutputTokens, note) {
 /**
  * The provider call.
  *
- * Uses generateText, matching the route — the router's models do not reliably
- * support structured-output mode, so JSON is requested in the prompt and
- * validated here.
- *
- * The Hugging Face router can answer HTTP 200 with an ERROR BODY (a quota or
- * billing refusal, for instance), which the SDK then reports as the opaque
- * "Invalid JSON response". That message sends you looking for a prompt bug when
- * the real problem is an exhausted account, so the body is inspected here and the
- * provider's own reason is surfaced instead.
+ * Deliberately does NOT use `generateText`: the routers in play can report a
+ * refusal as an error body on an HTTP 200, and the only way to see that body is to
+ * make the request directly. This mirrors the route's own guarded request, so the
+ * eval measures the shipped behaviour rather than a paraphrase of it.
  */
 async function callProvider(config, prompt, maxOutputTokens) {
-  const { createOpenAI } = await import("@ai-sdk/openai");
-  const { generateText } = await import("ai");
+  const { classifyResponseBody, ProviderError } = await import("../build-test/provider-errors.mjs");
 
-  const client = createOpenAI({ baseURL: config.baseURL, apiKey: config.apiKey });
+  const endpoint = `${config.baseURL.replace(/\/+$/, "")}/chat/completions`;
+  let response;
   try {
-    const result = await generateText({
-      model: client(config.model),
-      system: prompt.system,
-      prompt: prompt.user,
-      maxOutputTokens,
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages: [
+          { role: "system", content: prompt.system },
+          { role: "user", content: prompt.user },
+        ],
+        max_tokens: maxOutputTokens,
+        temperature: 0.4,
+      }),
+      signal: AbortSignal.timeout(90_000),
     });
-    return result.text;
   } catch (err) {
-    const body = err && typeof err === "object" && "responseBody" in err ? String(err.responseBody) : "";
-    if (body) {
-      try {
-        const parsed = JSON.parse(body);
-        const message = parsed?.error?.message;
-        const code = parsed?.error?.code;
-        if (message) {
-          // Expected in the wild; the caller decides whether to continue.
-          throw new Error(`provider refused the request (${code ?? "error"}): ${message}`);
-        }
-      } catch (inner) {
-        if (inner instanceof Error && inner.message.startsWith("provider refused")) throw inner;
-      }
-    }
-    throw err;
+    throw new Error(`transport failure: ${err instanceof Error ? err.name : "unknown"}`);
   }
+
+  const rawBody = await response.text().catch(() => "");
+
+  // Classified before the status is trusted, because a 200 can carry a refusal.
+  const refusal = classifyResponseBody(rawBody, response.status);
+  if (refusal) {
+    // The eval prints the provider's own wording, because a human is reading the
+    // output and needs to know whether to fund the account. The ROUTE never does
+    // this — it maps the code to a bilingual message and drops the text.
+    const detail = extractProviderMessage(rawBody);
+    throw new Error(`${refusal}${detail ? `: ${detail}` : ""}`);
+  }
+
+  if (!response.ok) throw new Error(`http ${response.status}`);
+
+  const body = JSON.parse(rawBody);
+  const content = body?.choices?.[0]?.message?.content;
+  if (typeof content !== "string" || content.trim() === "") {
+    throw new Error("empty completion");
+  }
+  return content;
+}
+
+/** Pulls the provider's own message out for the human-readable eval log only. */
+function extractProviderMessage(rawBody) {
+  try {
+    const parsed = JSON.parse(rawBody);
+    const message = parsed?.error?.message ?? parsed?.message;
+    if (typeof message === "string") return message.replace(/\s+/g, " ").slice(0, 200);
+  } catch {
+    // Not JSON; fall through to a truncated raw string.
+  }
+  return String(rawBody).replace(/\s+/g, " ").slice(0, 200);
 }
 
 main().catch((err) => {

@@ -34,6 +34,7 @@ import {
   validateAnswerAlignment,
   validateQuestions,
 } from "./validate";
+import { classifyThrownError, toGenerateErrorCode } from "./provider-errors";
 
 /* -------------------------------------------------------------------------- */
 /* Error codes                                                                */
@@ -70,33 +71,12 @@ export const ERROR_STATUS: Record<GenerateErrorCode, number> = {
 /**
  * Recognises a provider refusal that arrived as a thrown error.
  *
- * The Hugging Face router answers some refusals — exhausted credits, a model the
- * account cannot use — with an error BODY, which the SDK surfaces as a generic
- * parse failure. Mapping that to `failed` tells the teacher to "try again" when
- * trying again cannot work, so the known refusal shapes are matched here.
- *
- * Only a code is returned; the provider's message is never forwarded or logged,
- * because it can embed request context.
+ * Superseded by `src/lib/ai/provider-errors.ts`, which inspects the response body
+ * before the SDK flattens it and returns a specific refusal code. This remains as
+ * a thin adapter so the pipeline's error vocabulary stays stable.
  */
 export function classifyProviderError(error: unknown): GenerateErrorCode {
-  const text = [
-    error instanceof Error ? error.message : "",
-    typeof error === "object" && error !== null && "responseBody" in error
-      ? String((error as { responseBody?: unknown }).responseBody)
-      : "",
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  if (!text) return "failed";
-  if (text.includes("credit") || text.includes("quota") || text.includes("402")) {
-    return "provider_unavailable";
-  }
-  if (text.includes("model_not_supported") || text.includes("not supported by any provider")) {
-    return "provider_unavailable";
-  }
-  if (text.includes("rate limit") || text.includes("429")) return "rate_limited";
-  return "failed";
+  return toGenerateErrorCode(classifyThrownError(error));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -591,10 +571,10 @@ export async function generate(args: GenerateArgs): Promise<GenerateResult> {
     } catch (err) {
       // A thrown provider/network error is never surfaced verbatim. One retry is
       // not attempted: a transport failure is not a formatting problem, and
-      // retrying it doubles the cost of an outage. A refusal the provider
-      // reported (no credits, model not served) is classified rather than
-      // flattened to "try again", because trying again cannot fix it.
-      const code = classifyProviderError(err);
+      // retrying it doubles the cost of an outage. The thrown error is classified
+      // rather than flattened to "try again", because a refusal the provider
+      // reported — no credits, an unroutable model — cannot be fixed by retrying.
+      const code = toGenerateErrorCode(classifyThrownError(err));
       logger.warn({ code, toolId, status: ERROR_STATUS[code], attempts });
       return fail(code, attempts, startedAt, now, logger, toolId);
     }

@@ -57,6 +57,12 @@ mkdir -p build-test
   --bundle --format=esm --platform=node --alias:@=./src \
   --outfile=build-test/validate.mjs --log-level=warning
 
+# Provider refusal classification. The guarded request path lives in the route, so
+# its logic is tested directly rather than through the pipeline.
+"$ESBUILD" src/lib/ai/provider-errors.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/provider-errors.mjs --log-level=warning
+
 # UI-side pure logic: the direction rule, the clipboard serializer, and the
 # option vocabulary the form offers. No React, so these bundle and test directly.
 "$ESBUILD" src/features/tools/lib/direction.ts \
