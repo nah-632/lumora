@@ -165,6 +165,12 @@ function httpGenerator(
             ],
             max_tokens: maxOutputTokens,
             temperature: 0.4,
+            // Asks the provider to emit a single JSON object rather than prose.
+            // It guarantees "an object", NOT this project's schema, so the exact
+            // field names are stated in the prompt as well — see shapeInstruction
+            // in the tool registry. Both are needed: this makes JSON likely, the
+            // prompt makes the RIGHT JSON likely, and the zod parse decides.
+            response_format: { type: "json_object" },
           }),
           // A generation can legitimately take a while on a busy provider, but
           // not forever. Without this a hung request holds a slot and the

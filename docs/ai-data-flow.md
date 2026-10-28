@@ -278,47 +278,45 @@ travel with the code.
    finished work. `scripts/eval-ai.mjs` collects those samples; it does not judge
    them.
 
-   **It has not yet collected any.** Verified on 2026-10-28 against the configured
-   account:
+   **RESOLVED 2026-10-28 — generation now succeeds end to end.** The feature was
+   pointed at OpenRouter (`AI_BASE_URL=https://openrouter.ai/api/v1`) using the
+   owner's key, via `scripts/openrouter-env.sh`. With that, all six cases in the
+   verification matrix (3 tools × AR/EN) returned schema-valid output on the first
+   attempt, at 8–30 s each. `scripts/eval-ai.mjs` can now collect the samples this
+   item asks for.
 
-   ```
-   GET /api/whoami-v2  →  {"name":"Lumora-6666","canPay":false,
-                           "billingMode":"prepaid","isPro":false}
-   ```
+   Two defects were found and fixed while doing it, both of which would have
+   blocked this on ANY provider:
 
-   The account is on **prepaid billing with a zero balance and no PRO
-   subscription**, and every model the router will serve this token is a billed
-   provider:
+   - **The reply shape was never stated.** `response_format: json_object` promises
+     "an object", not this project's object. Nothing in the prompt named the
+     `{"questions": [...]}` wrapper or the per-item field names, so the model
+     returned the most natural shape for the content — a bare single question —
+     and the strict parse rejected output whose content was actually correct.
+     Fixed by rendering the schema itself into the prompt (`shapeInstruction`), so
+     the instruction cannot drift from the validator.
+   - **`max_tokens` did not cover reasoning tokens.** A reasoning model spends
+     800–1300 tokens before emitting any JSON, so a budget sized for the answer
+     alone truncated mid-object and the payload failed to parse. Fixed by adding
+     explicit headroom (`REASONING_HEADROOM`).
 
-   - `GET /v1/models` lists 137 models, **none** with `is_free: true`.
-   - The two models commonly suggested as free (`meta-llama/Llama-3.2-3B-Instruct`,
-     `Qwen/Qwen2.5-7B-Instruct`) return `model_not_supported` — they are not routed
-     to any provider this account has enabled, so they are not a workaround.
-   - A routable model (`Qwen/Qwen3.5-9B`) returns the 402 refusal.
-   - `api-inference.huggingface.co`, the retired free serverless endpoint, no
-     longer resolves at all.
+   **Still not verified: output quality.** Nothing checks that a lesson plan is
+   pedagogically sound, accurate to the Bahraini curriculum, or appropriate for
+   the grade. A human teacher must review samples of each tool before this is
+   offered as finished work. `scripts/eval-ai.mjs` collects those samples; it does
+   not judge them. This remains the largest open risk in the feature.
 
-   So there is **no free path on this token**, and no generation has succeeded end
-   to end. The only evidence that the pipeline works is the test suite: 198 unit
-   and integration tests exercising every branch with an injected generator. That
-   is real coverage of the logic and no evidence at all about output quality. Both
-   facts belong here.
+   Note on the model: the free tier measured here is a shared pool, and individual
+   `:free` models return upstream 429s intermittently. The production model choice
+   should be a paid one, or have a fallback.
 
-   **Unblocking it needs one of:** (a) credits on this account, (b) a PRO
-   subscription, (c) a key for another OpenAI-compatible endpoint (OpenRouter and
-   its `:free` tier would work — `AI_BASE_URL=https://openrouter.ai/api/v1` plus
-   `OPENROUTER_API_KEY`, which the gateway accepts as `AI_API_KEY`), or (d) a
-   self-hosted model behind an OpenAI-compatible URL. The gateway is already fully
-   env-driven, so any of these is a configuration change and no code change.
-
-6. **The default model is not served by the configured account.** `AI_MODEL`
-   defaults to `tiiuae/Falcon-H1-3B-Instruct`, which returns
-   `model_not_supported` on this account's enabled providers. The gateway falls
-   back to that default when `AI_MODEL` is unset, so an unset variable is a broken
-   deployment rather than a safe one. The model list at
-   `GET /v1/models` returns 137 models with a live provider, 88 of them advertising
-   structured output — a working default should be chosen from that list and
-   recorded here. This is worth deciding together with item 5.
+6. **The default model is still the HuggingFace one.** `AI_MODEL` defaults to the
+   retired Falcon model that the HuggingFace router used to serve. OpenRouter
+   rejects it with "not a valid model ID". A deployment that sets `AI_BASE_URL`
+   but forgets `AI_MODEL` therefore fails with a provider error rather than
+   working. `scripts/openrouter-env.sh` always sets both, which is the mitigation
+   for now. The real fix is to change the default once the provider choice is
+   final, and to record the chosen model id here.
 
 7. **No generation log.** Deliberate, and it means there is no record of how often
    a tool produces unusable output in the field. If quality work begins, a log of

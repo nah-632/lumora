@@ -136,11 +136,27 @@ export type LessonPlanOutput = z.infer<typeof lessonPlanOutputSchema>;
  * so the validator has a single rule instead of three: for true/false the two
  * options are fixed by the prompt and the answer is option 0 or 1.
  */
+/**
+ * The index a model returns when a question has no correct option — a short
+ * answer, most often. Models reach for `-1` as the conventional "none" marker,
+ * and rejecting the whole payload over it throws away a set whose content is
+ * fine. Measured on a real provider: a short-answer item came back as -1 and
+ * nothing else in the set was wrong.
+ *
+ * Normalised rather than rejected: `-1` becomes `null`, which is a value the
+ * cross-field validator understands and reports properly, so a genuinely missing
+ * index is still an error rather than being silently accepted.
+ */
+const correctIndexSchema = z.preprocess((value) => {
+  if (value === -1) return null;
+  return value;
+}, z.number().int().min(0).max(3).nullable());
+
 export const questionItemSchema = z.object({
   type: z.enum(["mcq", "true-false", "short"]),
   prompt: z.string().min(1).max(600),
   options: z.array(z.string().min(1).max(240)).max(4),
-  correctIndex: z.number().int().min(0).max(3),
+  correctIndex: correctIndexSchema,
   answer: z.string().min(1).max(600),
 });
 
@@ -207,6 +223,113 @@ const SHARED_RULES: Record<OutputLanguage, string> = {
 8. Write the content in clear, standard English.`,
 };
 
+/**
+ * Renders the SHAPE of an output schema as a compact, human-readable skeleton.
+ *
+ * Why this exists: `response_format: json_object` only promises "an object".
+ * Without the field names spelled out, a model returns whatever object is most
+ * natural for the content — a bare single question, not the `{questions: [...]}`
+ * wrapper the schema requires — and the strict parse then rejects a response
+ * whose content was actually fine. Measured on a real provider: a correct Arabic
+ * multiple-choice question was thrown away purely because it lacked the wrapper.
+ *
+ * The skeleton is derived from the schema itself, so the prompt cannot drift
+ * away from the validator. It shows structure and field names only; lengths and
+ * other constraints stay in the writer's prose, where they read as guidance
+ * rather than as noise.
+ */
+function renderShape(schema: z.ZodTypeAny, depth = 0): string {
+  const def = (schema as unknown as { _def?: Record<string, unknown> })._def;
+  if (!def) return '"<value>"';
+
+  const typeName = def.typeName as string | undefined;
+
+  switch (typeName) {
+    case "ZodObject": {
+      const shape = (schema as unknown as { shape: Record<string, z.ZodTypeAny> }).shape;
+      const keys = Object.keys(shape);
+      const pad = "  ".repeat(depth + 1);
+      const close = "  ".repeat(depth);
+      if (keys.length === 0) return "{}";
+      const inner = keys
+        .map((key) => `${pad}"${key}": ${renderShape(shape[key], depth + 1)}`)
+        .join(",\n");
+      return `{\n${inner}\n${close}}`;
+    }
+    case "ZodArray": {
+      const element = (schema as unknown as { element: z.ZodTypeAny }).element;
+      // Render the element one level deeper than the array itself, so a nested
+      // object's braces already sit inside the brackets. Doing it here rather
+      // than re-indenting the produced text keeps every level consistent.
+      const inner = renderShape(element, depth + 1);
+      if (!inner.includes("\n")) return `[${inner}]`;
+      const outerPad = "  ".repeat(depth);
+      const innerPad = "  ".repeat(depth + 1);
+      const [first, ...rest] = inner.split("\n");
+      const body = [first, ...rest.map((line) => line)]
+        .map((line, i) => (i === 0 ? `${innerPad}${line}` : line))
+        .join("\n");
+      return `[\n${body}\n${outerPad}]`;
+    }
+    case "ZodEnum": {
+      const values = (schema as unknown as { options: string[] }).options;
+      return values.map((value) => `"${value}"`).join(" | ");
+    }
+    case "ZodUnion":
+    case "ZodDiscriminatedUnion": {
+      const options = (schema as unknown as { options: z.ZodTypeAny[] }).options;
+      return options.map((option) => renderShape(option, depth)).join(" | ");
+    }
+    case "ZodString":
+      return '"<string>"';
+    case "ZodNumber":
+      return "<number>";
+    case "ZodBoolean":
+      return "<boolean>";
+    case "ZodOptional":
+    case "ZodNullable":
+    case "ZodDefault": {
+      const inner = (schema as unknown as { _def: { innerType: z.ZodTypeAny } })._def.innerType;
+      return renderShape(inner, depth);
+    }
+    case "ZodEffects": {
+      // A `.preprocess()` or `.transform()` wrapper. Rendering the inner schema is
+      // correct: the model must produce the shape the schema WRITES, and the
+      // effect exists to normalise what it does read. Measured case: correctIndex
+      // is wrapped in a preprocess that maps the model's "-1" to null, and the
+      // unwrapped render is what told the model it is a number.
+      const inner = (schema as unknown as { _def: { schema: z.ZodTypeAny } })._def.schema;
+      return inner ? renderShape(inner, depth) : '"<value>"';
+    }
+    default:
+      return '"<value>"';
+  }
+}
+
+/**
+ * The instruction block appended to every task prompt.
+ *
+ * Stated in the user message rather than the system prompt on purpose: it is
+ * about the SHAPE of this particular reply, and it sits next to the counts and
+ * the requested types, which is where a model looks when deciding how many
+ * items to emit.
+ */
+function shapeInstruction(schema: z.ZodTypeAny, language: OutputLanguage): string {
+  const shape = renderShape(schema);
+  if (language === "ar") {
+    return [
+      "أعِد كائن JSON واحدًا بهذا الشكل بالضبط:",
+      shape,
+      "التزم بأسماء الحقول كما هي مكتوبة بالإنجليزية أعلاه، ولا تضف حقولًا غير مذكورة، ولا تغلّف الرد بنص أو بعلامات ``` .",
+    ].join("\n");
+  }
+  return [
+    "Return ONE JSON object with exactly this shape:",
+    shape,
+    "Use the field names exactly as written above. Do not add fields that are not listed, and do not wrap the reply in prose or code fences.",
+  ].join("\n");
+}
+
 const LESSON_PLAN_TASK: Record<OutputLanguage, string> = {
   ar: `أنت مصمم مناهج. أنشئ خطة درس واحدة قابلة للتنفيذ يحضّرها معلم في البحرين.
 اجعل الأنشطة صفّية وواقعية، وزمن المراحل مجموعُه هو مدة الحصة المطلوبة.`,
@@ -265,6 +388,7 @@ function lessonPlanUserMessage(input: z.infer<typeof lessonPlanInputSchema>): st
     `topic: ${input.topic ?? "(not given — choose an appropriate one for the grade and subject)"}`,
     `output_language: ${input.outputLanguage}`,
   ];
+  lines.push("", shapeInstruction(lessonPlanOutputSchema, input.outputLanguage));
   return lines.join("\n");
 }
 
@@ -279,6 +403,7 @@ function questionsUserMessage(input: z.infer<typeof questionsInputSchema>): stri
     `output_language: ${input.outputLanguage}`,
     "Distribute the count across the requested types as evenly as possible.",
   ];
+  lines.push("", shapeInstruction(questionsOutputSchema, input.outputLanguage));
   return lines.join("\n");
 }
 
@@ -295,6 +420,7 @@ function remedialUserMessage(input: z.infer<typeof remedialPlanInputSchema>): st
     `notes: ${input.notes ?? "(none)"}`,
     `output_language: ${input.outputLanguage}`,
   ];
+  lines.push("", shapeInstruction(remedialPlanOutputSchema, input.outputLanguage));
   return lines.join("\n");
 }
 
@@ -386,6 +512,22 @@ const QUESTION_TOKENS_OVERHEAD = 500;
 const LESSON_PLAN_TOKENS = 2500;
 const REMEDIAL_PLAN_TOKENS = 1500;
 
+/**
+ * Headroom for a model that "thinks" before it answers.
+ *
+ * `max_tokens` covers reasoning tokens as well as the visible answer, and on the
+ * providers measured here a reasoning model spends 800–1300 tokens before
+ * emitting a single character of JSON. A budget sized for the answer alone
+ * therefore truncates mid-object and the payload fails to parse — which looks
+ * like a schema bug and is really an arithmetic one. Measured: a remedial plan
+ * hit `finish_reason: length` at 1500 tokens with only reasoning emitted.
+ *
+ * Non-reasoning models simply never use the extra room, so this is a ceiling,
+ * not a cost. The truncation retry in the route remains the backstop for a model
+ * that overruns even this.
+ */
+const REASONING_HEADROOM = 1500;
+
 const registry: Record<ToolId, ToolDefinition<z.ZodTypeAny, z.ZodTypeAny>> = {
   "lesson-plan": {
     id: "lesson-plan",
@@ -397,7 +539,7 @@ const registry: Record<ToolId, ToolDefinition<z.ZodTypeAny, z.ZodTypeAny>> = {
     },
     taskPrompt: LESSON_PLAN_TASK,
     buildUserMessage: lessonPlanUserMessage as ToolDefinition<z.ZodTypeAny, z.ZodTypeAny>["buildUserMessage"],
-    maxOutputTokens: () => LESSON_PLAN_TOKENS,
+    maxOutputTokens: () => LESSON_PLAN_TOKENS + REASONING_HEADROOM,
     titleKey: "tools.lessonPlan.title",
     descriptionKey: "tools.lessonPlan.description",
   },
@@ -412,7 +554,9 @@ const registry: Record<ToolId, ToolDefinition<z.ZodTypeAny, z.ZodTypeAny>> = {
     taskPrompt: QUESTIONS_TASK,
     buildUserMessage: questionsUserMessage as ToolDefinition<z.ZodTypeAny, z.ZodTypeAny>["buildUserMessage"],
     maxOutputTokens: (input) =>
-      Number((input as QuestionsInput).count) * QUESTION_TOKENS_PER_ITEM + QUESTION_TOKENS_OVERHEAD,
+      Number((input as QuestionsInput).count) * QUESTION_TOKENS_PER_ITEM +
+      QUESTION_TOKENS_OVERHEAD +
+      REASONING_HEADROOM,
     titleKey: "tools.questions.title",
     descriptionKey: "tools.questions.description",
   },
@@ -426,7 +570,7 @@ const registry: Record<ToolId, ToolDefinition<z.ZodTypeAny, z.ZodTypeAny>> = {
     },
     taskPrompt: REMEDIAL_TASK,
     buildUserMessage: remedialUserMessage as ToolDefinition<z.ZodTypeAny, z.ZodTypeAny>["buildUserMessage"],
-    maxOutputTokens: () => REMEDIAL_PLAN_TOKENS,
+    maxOutputTokens: () => REMEDIAL_PLAN_TOKENS + REASONING_HEADROOM,
     titleKey: "tools.remedialPlan.title",
     descriptionKey: "tools.remedialPlan.description",
   },

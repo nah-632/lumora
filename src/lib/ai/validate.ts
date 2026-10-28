@@ -112,7 +112,9 @@ export function validateQuestions(
       }
 
       // Exactly one correct, expressed as an in-range index.
-      if (!Number.isInteger(question.correctIndex)) {
+      // A null index is the normalised form of the model's "-1" for "no answer",
+      // which is never acceptable on a choice question.
+      if (question.correctIndex === null || !Number.isInteger(question.correctIndex)) {
         issues.push({ path: at("correctIndex"), reason: "expected an integer option index" });
       } else if (question.correctIndex < 0 || question.correctIndex >= question.options.length) {
         issues.push({
@@ -140,7 +142,11 @@ export function validateQuestions(
           reason: "a true/false question must offer exactly two options: true and false",
         });
       }
-      if (question.correctIndex < 0 || question.correctIndex > 1) {
+      if (
+        question.correctIndex === null ||
+        question.correctIndex < 0 ||
+        question.correctIndex > 1
+      ) {
         issues.push({
           path: at("correctIndex"),
           reason: "a true/false answer must be option 0 or option 1",
@@ -184,12 +190,16 @@ export function validateAnswerAlignment(output: QuestionsOutput): McqValidationR
     if (question.type === "short") return;
 
     const at = (field: string) => `questions[${index}].${field}`;
-    const chosen = question.options[question.correctIndex];
+    const chosenIndex = question.correctIndex;
+    // A null index on a choice question is already reported by validateQuestions;
+    // there is no option to compare the answer against.
+    if (chosenIndex === null) return;
+    const chosen = question.options[chosenIndex];
     if (chosen === undefined) return; // already reported by validateQuestions
 
     const answer = normaliseOption(question.answer);
     const expected = normaliseOption(chosen);
-    const letter = letters[question.correctIndex];
+    const letter = letters[chosenIndex];
     const shortLetter = letter;
 
     const agrees =
@@ -197,21 +207,21 @@ export function validateAnswerAlignment(output: QuestionsOutput): McqValidationR
       answer === letter ||
       answer === `${letter})` ||
       answer === `${letter}.` ||
-      answer === String(question.correctIndex) ||
+      answer === String(chosenIndex) ||
       answer.includes(expected);
 
     if (!agrees) {
       // The names of the options are deliberately not repeated here.
       issues.push({
         path: at("answer"),
-        reason: `the answer does not match the option marked correct (option ${question.correctIndex + 1})`,
+        reason: `the answer does not match the option marked correct (option ${chosenIndex + 1})`,
       });
     }
 
     // A common model failure: the answer names a different option's text.
     const otherOptions = question.options
       .map((option, i) => ({ option: normaliseOption(option), i }))
-      .filter(({ i }) => i !== question.correctIndex);
+      .filter(({ i }) => i !== chosenIndex);
     for (const { option } of otherOptions) {
       if (option.length > 0 && answer === option) {
         issues.push({

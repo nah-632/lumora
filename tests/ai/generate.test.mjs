@@ -230,8 +230,9 @@ test("truncation: questions retries once with count - 5 and a smaller budget", a
 
   // The budget must shrink on the retry, or the retry is pointless.
   const [first, second] = generator.calls;
-  assert.equal(first.maxOutputTokens, 15 * 250 + 500);
-  assert.equal(second.maxOutputTokens, 10 * 250 + 500);
+  const headroom = 1500; // reasoning tokens, see REASONING_HEADROOM
+  assert.equal(first.maxOutputTokens, 15 * 250 + 500 + headroom);
+  assert.equal(second.maxOutputTokens, 10 * 250 + 500 + headroom);
   // And the retry asks for 10, not 15.
   assert.match(second.user, /count: 10/);
 });
@@ -339,7 +340,12 @@ test("invalid output: the retry prompt carries the path and the shape, not the v
     );
   }
   assert.equal(repairPrompt.includes("Student Ali"), false);
-  assert.equal(repairPrompt.includes("script"), false);
+  // Note: a bare `includes("script")` would be wrong — the shape skeleton in the
+  // prompt legitimately contains the placeholder "<string>", which contains
+  // "script". The property that matters is that no part of the hostile VALUE
+  // survives, so the tag is checked whole.
+  assert.equal(repairPrompt.includes("<script>"), false, "no tag from the value");
+  assert.equal(repairPrompt.includes("alert(1)"), false, "no payload from the value");
 });
 
 test("summariseIssues: never quotes a value, for enums or literals either", () => {

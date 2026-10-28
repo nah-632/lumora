@@ -225,11 +225,12 @@ test("token budget: the questions budget scales with the requested count", () =>
   assert.ok(budget("5") >= 1000, "5 questions still need room for the wrapper JSON");
 });
 
-test("token budget: fixed budgets are positive integers", () => {
+test("token budget: fixed budgets are positive integers with reasoning headroom", () => {
   const lesson = getTool("lesson-plan").maxOutputTokens(
     getTool("lesson-plan").inputSchema.parse(validLessonPlan),
   );
-  assert.equal(lesson, 2500);
+  // The constant plus headroom for a reasoning model's hidden tokens.
+  assert.equal(lesson, 2500 + 1500);
   const remedial = getTool("remedial-plan").maxOutputTokens(
     getTool("remedial-plan").inputSchema.parse({
       outputLanguage: "ar",
@@ -239,7 +240,7 @@ test("token budget: fixed budgets are positive integers", () => {
       difficultyTags: ["vocabulary"],
     }),
   );
-  assert.equal(remedial, 1500);
+  assert.equal(remedial, 1500 + 1500);
 });
 
 /* -------------------------------------------------------------------------- */
