@@ -48,6 +48,41 @@ create policy student_alerts_select_own on public.student_alerts
 
 drop policy if exists canary_del_alerts on public.student_alerts;
 revoke delete on public.student_alerts from authenticated;
+
+-- The curriculum verified-only policies, recreated as part of the restore so a
+-- canary breach that drops them cannot leave a teacher with all rows visible.
+-- The withdraw was added in 0017 (renamed from the baseline's using(true)
+-- SELECT_AUTH variants). The barrier these enforce: an unverified source
+-- (verified_at is null) is invisible to a teacher, which is what the curriculum
+-- honesty feature depends on -- a model is only fed VERIFIED text.
+drop policy if exists curriculum_sources_select_verified on public.curriculum_sources;
+create policy curriculum_sources_select_verified on public.curriculum_sources
+  for select to authenticated
+  using (verified_at is not null);
+
+drop policy if exists curriculum_documents_select_verified on public.curriculum_documents;
+create policy curriculum_documents_select_verified on public.curriculum_documents
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.curriculum_sources s
+       where s.id = curriculum_documents.source_id
+         and s.verified_at is not null
+    )
+  );
+
+drop policy if exists curriculum_chunks_select_verified on public.curriculum_chunks;
+create policy curriculum_chunks_select_verified on public.curriculum_chunks
+  for select to authenticated
+  using (
+    exists (
+      select 1
+        from public.curriculum_documents d
+        join public.curriculum_sources s on s.id = d.source_id
+       where d.id = curriculum_chunks.document_id
+         and s.verified_at is not null
+    )
+  );
 `;
 
 /**

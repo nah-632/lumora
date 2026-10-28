@@ -63,6 +63,24 @@ mkdir -p build-test
   --bundle --format=esm --platform=node --alias:@=./src \
   --outfile=build-test/provider-errors.mjs --log-level=warning
 
+# The curriculum-expert prompt builder. Pure functions over strings, so it
+# bundles with no dependencies.
+"$ESBUILD" src/lib/ai/prompts/curriculum-expert.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/curriculum-expert.mjs --log-level=warning
+
+# Curriculum grounding: the prompt builder, the escaping, the URL stripping and
+# the reference assembly. All pure functions over strings and objects, so this
+# bundles with no database client and no network.
+"$ESBUILD" src/lib/ai/curriculum.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/curriculum.mjs --log-level=warning
+
+# The retrieval adapter, tested against a fake transport rather than a database.
+"$ESBUILD" src/lib/ai/curriculum-query.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/curriculum-query.mjs --log-level=warning
+
 # UI-side pure logic: the direction rule, the clipboard serializer, and the
 # option vocabulary the form offers. No React, so these bundle and test directly.
 "$ESBUILD" src/features/tools/lib/direction.ts \

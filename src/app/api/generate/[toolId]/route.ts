@@ -19,7 +19,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { requireUser } from "@/server/supabase";
+import { requireUser, readSupabaseEnv, restRequest } from "@/server/supabase";
 import { resolveProvider } from "@/lib/ai/gateway";
 import {
   ERROR_STATUS,
@@ -32,10 +32,29 @@ import {
 import { getRateLimiter, serverLogger } from "@/lib/ai/limit";
 import { isToolId } from "@/lib/ai/tools";
 import { ProviderError, classifyResponseBody } from "@/lib/ai/provider-errors";
+import {
+  buildCurriculumContext,
+  buildReferences,
+  ensureGroundingLabel,
+  stripModelUrls,
+  type CurriculumMatch,
+} from "@/lib/ai/curriculum";
+import { SessionCurriculumQuery, gradeToLevel } from "@/lib/ai/curriculum-query";
+import type { OutputLanguage } from "@/lib/ai/tools";
 
 export const runtime = "nodejs";
 /** Generation is per-request and user-scoped; nothing about it is cacheable. */
 export const dynamic = "force-dynamic";
+
+/**
+ * The tool ids whose output is a written artefact a teacher may hand out.
+ *
+ * Only these get curriculum grounding and a references block. `questions` is a
+ * set of items with no prose for a citation to attach to, and grounding it would
+ * put a source heading above an exam paper, which reads as "these questions come
+ * from the curriculum" — a claim this pipeline cannot support.
+ */
+const GROUNDED_TOOLS = new Set(["lesson-plan", "remedial-plan"]);
 
 export async function POST(req: Request, context: { params: { toolId: string } }) {
   const toolId = context.params.toolId;
@@ -77,7 +96,20 @@ export async function POST(req: Request, context: { params: { toolId: string } }
     return json({ ok: false, code: "invalid_input" }, 400);
   }
 
-  // 4. Generate. Rate limiting happens inside, before the first provider call.
+  const logger = serverLogger();
+
+  // 4. Curriculum retrieval, BEFORE the first provider call.
+  //
+  //    This is the only network read in the request that is not the model call,
+  //    and it happens here so the pipeline stays a pure two-call module. A
+  //    failure inside it returns no matches and the request proceeds ungrounded:
+  //    a lesson plan written from general standards is a valid product, and a 500
+  //    because a lookup table was unreachable is not.
+  const grounding = GROUNDED_TOOLS.has(toolId)
+    ? await resolveGrounding(options, session.token, logger)
+    : undefined;
+
+  // 5. Generate. Rate limiting happens inside, before the first provider call.
   const generator = httpGenerator(provider);
   const result = await generate({
     toolId,
@@ -85,7 +117,8 @@ export async function POST(req: Request, context: { params: { toolId: string } }
     userId: session.user.id,
     generator,
     limiter: getRateLimiter(),
-    logger: serverLogger(),
+    logger,
+    grounding: grounding ? { block: grounding.block, hasText: grounding.hasText } : undefined,
   });
 
   if (!result.ok) {
@@ -96,7 +129,124 @@ export async function POST(req: Request, context: { params: { toolId: string } }
     return json({ ok: false, code: result.code }, result.status, headers);
   }
 
-  return json({ ok: true, data: result.data }, 200);
+  // 6. Post-process. Every URL a teacher sees comes from here, not from the model.
+  const language = options.outputLanguage as OutputLanguage;
+  const { data, urlsRemoved } = finaliseOutput(
+    result.data,
+    grounding?.matches ?? [],
+    grounding?.hasText ?? false,
+    language,
+  );
+
+  // The count is logged, the URLs are not: a model-emitted URL is a signal that
+  // the prompt was ignored, and writing the URL itself into a log would make a
+  // hallucinated destination look like a recorded reference.
+  if (urlsRemoved > 0) {
+    logger.warn({ code: "model_emitted_urls_stripped", toolId, count: urlsRemoved, status: 200 });
+  }
+
+  return json({ ok: true, data }, 200);
+}
+
+/**
+ * Resolves the curriculum context for a request.
+ *
+ * The retrieval call is wrapped because a throw here must not become a 500. The
+ * fields it needs are read defensively: `grade` and `subject` are enum-validated
+ * by the registry, but this function also runs in tests that pass a bare object.
+ *
+ * The request runs on the CALLER'S OWN TOKEN, so the verified-only RLS policies
+ * are what decide which rows come back — this function does not re-implement the
+ * authorisation decision. See the header of `curriculum-query.ts`.
+ */
+async function resolveGrounding(
+  options: Record<string, unknown>,
+  token: string,
+  logger: ReturnType<typeof serverLogger>,
+) {
+  const env = readSupabaseEnv();
+  if (!env) return buildCurriculumContext([]);
+
+  const subject = typeof options.subject === "string" ? options.subject : "";
+  const grade = typeof options.grade === "string" ? options.grade : "";
+  const topic = typeof options.topic === "string" && options.topic !== "" ? options.topic : null;
+
+  if (!subject || !grade) {
+    // Nothing to query on. The honest answer is "no curriculum text", not an
+    // exception and not a guess at a subject.
+    return buildCurriculumContext([]);
+  }
+
+  const query = new SessionCurriculumQuery(
+    (path, body) =>
+      restRequest(env, token, path, {
+        method: "POST",
+        body,
+        headers: { "content-type": "application/json" },
+      }),
+    logger,
+  );
+
+  const matches = await query.search({
+    subject,
+    gradeLevel: gradeToLevel(grade),
+    lessonTopic: topic,
+    term: null,
+    limit: 3,
+  });
+
+  return buildCurriculumContext(matches);
+}
+
+/**
+ * Strips model-generated URLs from every prose field, then appends the
+ * server-built references block.
+ *
+ * The walk is generic because the two grounded tools have different output
+ * shapes (`lesson-plan` has `stages`, `remedial-plan` has `sessions`), and a
+ * field-by-field version would silently miss a field added later. Strings are
+ * transformed and everything else is passed through — numbers, booleans and
+ * nulls cannot contain a URL.
+ */
+function finaliseOutput(
+  data: unknown,
+  matches: CurriculumMatch[],
+  hasText: boolean,
+  language: OutputLanguage,
+): { data: unknown; urlsRemoved: number } {
+  let urlsRemoved = 0;
+
+  const walk = (value: unknown): unknown => {
+    if (typeof value === "string") {
+      const stripped = stripModelUrls(value);
+      urlsRemoved += stripped.removed;
+      return stripped.text;
+    }
+    if (Array.isArray(value)) return value.map(walk);
+    if (value && typeof value === "object") {
+      const out: Record<string, unknown> = {};
+      for (const [key, inner] of Object.entries(value as Record<string, unknown>)) {
+        out[key] = walk(inner);
+      }
+      return out;
+    }
+    return value;
+  };
+
+  const stripped = walk(data) as Record<string, unknown>;
+
+  // The grounding label is applied AFTER stripping, so a model that emitted the
+  // disclaimer wrapped around a URL does not end up with a mangled sentence.
+  if (typeof stripped?.title === "string") {
+    stripped.title = ensureGroundingLabel(stripped.title, hasText, language);
+  }
+
+  const references = buildReferences(matches, language);
+  if (references) {
+    stripped.references = references;
+  }
+
+  return { data: stripped, urlsRemoved };
 }
 
 /* -------------------------------------------------------------------------- */

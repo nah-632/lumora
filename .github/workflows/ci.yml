@@ -149,7 +149,7 @@ jobs:
 
           tables=$(q "select count(*) from information_schema.tables
                        where table_schema='public' and table_type='BASE TABLE'")
-          [ "$tables" = "20" ] || fail "expected 20 public tables, found $tables"
+          [ "$tables" = "21" ] || fail "expected 21 public tables, found $tables"
 
           [ "$(q "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
                    where n.nspname='public' and p.proname='has_privilege_probe'")" = "1" ] \
