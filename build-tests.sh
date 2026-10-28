@@ -57,4 +57,18 @@ mkdir -p build-test
   --bundle --format=esm --platform=node --alias:@=./src \
   --outfile=build-test/validate.mjs --log-level=warning
 
+# UI-side pure logic: the direction rule, the clipboard serializer, and the
+# option vocabulary the form offers. No React, so these bundle and test directly.
+"$ESBUILD" src/features/tools/lib/direction.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/direction.mjs --log-level=warning
+
+"$ESBUILD" src/features/tools/lib/serialize.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/serialize.mjs --log-level=warning
+
+"$ESBUILD" src/features/tools/specs.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/specs.mjs --log-level=warning
+
 echo "build-test OK"
