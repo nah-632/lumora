@@ -300,6 +300,27 @@ travel with the code.
      alone truncated mid-object and the payload failed to parse. Fixed by adding
      explicit headroom (`REASONING_HEADROOM`).
 
+   **Samples have now been collected: 7/7 cases pass, and a teacher has not read
+   them yet.** The full eval (`scripts/eval-ai.mjs`) ran on 2026-10-28 against
+   OpenRouter with `nvidia/nemotron-3.5-super-vl:free`:
+
+   ```
+   passed            7/7
+   schema valid      7/7
+   language match    7
+   needed a retry    1
+   truncated         0
+   latency p50/p95   21400ms / 128205ms
+   ```
+
+   Readable drafts, with the Arabic and English separated, are in
+   `shared/lumora-ai-samples/samples-{ar,en}.md`. The 15-question Arabic case
+   needed one retry, which is the repair path working as designed.
+
+   The p95 is an artifact of the shared free pool (one empty response at 108 s),
+   not a property of this code. A paid model should be measured separately before
+   any latency figure is quoted.
+
    **Still not verified: output quality.** Nothing checks that a lesson plan is
    pedagogically sound, accurate to the Bahraini curriculum, or appropriate for
    the grade. A human teacher must review samples of each tool before this is
