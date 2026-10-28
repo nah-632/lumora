@@ -14,7 +14,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const { generate, buildPrompt, summariseIssues, looksTruncated, ERROR_STATUS, parseRequestEnvelope } =
+const { generate, buildPrompt, summariseIssues, looksTruncated, ERROR_STATUS, parseRequestEnvelope, classifyProviderError } =
   await import("../../build-test/generate.mjs");
 const { getTool, stripControlChars } = await import("../../build-test/tools.mjs");
 
@@ -693,4 +693,64 @@ test("envelope: only { options } is accepted, and nothing else", () => {
 test("stripControlChars is idempotent and safe on already-clean text", () => {
   const clean = "القسمة على الكسور";
   assert.equal(stripControlChars(stripControlChars(clean)), clean);
+});
+
+/* -------------------------------------------------------------------------- */
+/* Provider error classification                                              */
+/* -------------------------------------------------------------------------- */
+
+test("provider errors: an exhausted account is not reported as a retryable failure", () => {
+  // The Hugging Face router answers a credit refusal with an error BODY, which
+  // the SDK turns into "Invalid JSON response". Mapping that to `failed` tells the
+  // teacher to try again, which cannot work.
+  const err = Object.assign(new Error("Invalid JSON response"), {
+    responseBody: JSON.stringify({
+      error: { code: "server_error", message: "402 You have no remaining credits." },
+    }),
+  });
+  assert.equal(classifyProviderError(err), "provider_unavailable");
+});
+
+test("provider errors: a model the account cannot use is provider_unavailable", () => {
+  const err = Object.assign(new Error("Invalid JSON response"), {
+    responseBody: JSON.stringify({
+      error: { code: "model_not_supported", message: "not supported by any provider you have enabled" },
+    }),
+  });
+  assert.equal(classifyProviderError(err), "provider_unavailable");
+});
+
+test("provider errors: a rate limit is reported as rate_limited", () => {
+  assert.equal(classifyProviderError(new Error("429 Too Many Requests")), "rate_limited");
+  assert.equal(classifyProviderError(new Error("rate limit exceeded")), "rate_limited");
+});
+
+test("provider errors: anything unrecognised stays a generic failure", () => {
+  assert.equal(classifyProviderError(new Error("socket hang up")), "failed");
+  assert.equal(classifyProviderError(new Error("")), "failed");
+  assert.equal(classifyProviderError(null), "failed");
+  assert.equal(classifyProviderError(undefined), "failed");
+});
+
+test("provider errors: a classified refusal maps to 503, not 502", () => {
+  assert.equal(ERROR_STATUS.provider_unavailable, 503);
+  assert.equal(ERROR_STATUS.failed, 502);
+});
+
+test("provider errors: the provider message is never forwarded to the caller", async () => {
+  const leaky = Object.assign(new Error("Invalid JSON response"), {
+    responseBody: JSON.stringify({
+      error: { code: "server_error", message: "402 You have no remaining credits. Key sk-LEAK-xyz" },
+    }),
+  });
+  const logger = capturingLogger();
+  const result = await generate(
+    baseArgs({ generator: { generate: async () => { throw leaky; } }, logger }),
+  );
+
+  assert.equal(result.code, "provider_unavailable");
+  assert.equal(result.status, 503);
+  assert.equal(logger.text().includes("sk-LEAK"), false);
+  assert.equal(logger.text().includes("credits"), false);
+  assert.equal(JSON.stringify(result).includes("credits"), false);
 });

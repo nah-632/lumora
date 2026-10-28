@@ -313,6 +313,7 @@ test("messages: every key the UI uses resolves in both catalogs", () => {
     "tools.errors.rate_limited",
     "tools.errors.quota_exceeded",
     "tools.errors.ai_output_invalid",
+    "tools.errors.provider_unavailable",
     "tools.errors.truncated",
     "tools.errors.failed",
     "tools.result.lessonPlanTitle",

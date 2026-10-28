@@ -211,7 +211,8 @@
       "quota_exceeded": "You have used your daily generation quota. Try again tomorrow.",
       "ai_output_invalid": "A usable draft could not be produced. Try again.",
       "truncated": "The model produced truncated content. Try fewer questions.",
-      "failed": "Something went wrong. Please try again."
+      "failed": "Something went wrong. Please try again.",
+      "provider_unavailable": "The AI service is currently unavailable. Contact your administrator."
     },
     "difficulty": {
       "easy": "Easy",

@@ -133,6 +133,8 @@ export function ToolsWorkspace({ locale }: { locale: "ar" | "en" }) {
         return t("errors.rate_limited");
       case "quota_exceeded":
         return t("errors.quota_exceeded");
+      case "provider_unavailable":
+        return t("errors.provider_unavailable");
       case "ai_output_invalid":
         return t("errors.ai_output_invalid");
       default:
