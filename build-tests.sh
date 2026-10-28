@@ -35,4 +35,16 @@ mkdir -p build-test
   --bundle --format=esm --platform=node \
   --outfile=build-test/tools.mjs --log-level=warning
 
+# The generation pipeline. Same reason: no environment, no cookies, no provider
+# at import time, so it tests without a key.
+"$ESBUILD" src/lib/ai/generate.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/generate.mjs --log-level=warning
+
+# Rate limiter and logger. Excluded from the app bundle; the limiter is a class
+# over an injected clock so the daily cap can be tested without waiting a day.
+"$ESBUILD" src/lib/ai/limit.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/limit.mjs --log-level=warning
+
 echo "build-test OK"
