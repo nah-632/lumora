@@ -221,6 +221,7 @@ async function main() {
   let failures = 0;
 
   for (const testCase of cases) {
+    try {
     const tool = getTool(testCase.toolId);
     const parsedOptions = parseOptions(testCase.toolId, testCase.options);
     if (!parsedOptions) {
@@ -355,6 +356,31 @@ async function main() {
     const latencyMs = Date.now() - startedAt;
     if (finalError) failures += 1;
 
+    // A failed case writes a record too. Without it, the only trace of a failure
+    // is a summary line, and a reader cannot tell "the model wrote something
+    // unusable" from "the shared pool returned an empty body" — two problems with
+    // completely different fixes. The raw response is included when one arrived.
+    if (finalError) {
+      writeFileSync(
+        `${outDir}/${testCase.id}.json`,
+        JSON.stringify(
+          {
+            case: testCase.id,
+            input: testCase.options,
+            failed: true,
+            error: finalError,
+            attempts,
+            truncated,
+            latencyMs,
+            outputLanguage: testCase.options.outputLanguage,
+            draft: raw || null,
+          },
+          null,
+          2,
+        ),
+      );
+    }
+
     rows.push({
       id: testCase.id,
       tool: testCase.toolId,
@@ -380,6 +406,28 @@ async function main() {
         `${latencyMs}ms` +
         `${finalError ? `\n     ${finalError}` : ""}`,
     );
+    } catch (err) {
+      // One case throwing must not cost the samples already collected. The cause
+      // is recorded and the loop continues to the next case.
+      failures += 1;
+      const message = err instanceof Error ? err.message : String(err);
+      console.log(
+        `FAIL ${testCase.id.padEnd(22)} unexpected error: ${message}`,
+      );
+      rows.push({
+        id: testCase.id,
+        tool: testCase.toolId,
+        language: testCase.options.outputLanguage,
+        schemaOk: false,
+        crossField: "",
+        languageVerdict: "",
+        languageRatio: 0,
+        attempts: 0,
+        truncated: false,
+        latencyMs: 0,
+        error: `unexpected error: ${message}`,
+      });
+    }
   }
 
   /* ------------------------------------------------------------------------ */
@@ -465,7 +513,20 @@ async function callProvider(config, prompt, maxOutputTokens) {
 
   if (!response.ok) throw new Error(`http ${response.status}`);
 
-  const body = JSON.parse(rawBody);
+  // Guarded: a shared free pool can return an empty body or an HTML error page
+  // mid-run. Unguarded, that took the whole eval down and lost every sample
+  // already collected — the failure of one case must not cost the others.
+  let body;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    const preview = String(rawBody ?? "").replace(/\s+/g, " ").slice(0, 120);
+    throw new Error(
+      `non-JSON response body (${rawBody?.length ?? 0} bytes)` +
+        (preview ? `: ${preview}` : " — empty"),
+    );
+  }
+
   const content = body?.choices?.[0]?.message?.content;
   if (typeof content !== "string" || content.trim() === "") {
     throw new Error("empty completion");
