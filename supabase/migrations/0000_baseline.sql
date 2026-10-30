@@ -990,6 +990,7 @@ revoke all on table public."conversations" from anon, authenticated;
 revoke all on table public."curriculum_chunks" from anon, authenticated;
 revoke all on table public."curriculum_documents" from anon, authenticated;
 revoke all on table public."curriculum_sources" from anon, authenticated;
+revoke all on table public."pedagogical_activities" from anon, authenticated;
 revoke all on table public."generation_runs" from anon, authenticated;
 revoke all on table public."messages" from anon, authenticated;
 revoke all on table public."profiles" from anon, authenticated;
