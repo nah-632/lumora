@@ -61,7 +61,7 @@ async function handle(req: NextRequest): Promise<NextResponse> {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/brand") ||
     pathname === "/favicon.ico" ||
-    /\.(?:png|jpe?g|svg|webp|ico|txt|xml|json)$/i.test(pathname);
+    /\.(?:png|jpe?g|svg|webp|webmanifest|ico|txt|xml|json)$/i.test(pathname);
 
   if (!isInfrastructure) {
     const seg = pathname.split("/")[1];
