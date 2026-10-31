@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
+import "@/styles/tools.css";
 
 /**
  * The document shell lives in src/app/[locale]/layout.tsx, not here.

@@ -209,6 +209,26 @@ jobs:
           fi
           echo "grant sets identical ($(wc -l < /tmp/rebuilt-grants.txt) grants)"
 
+      # Grants prove the privilege surface; this proves the surface EXISTS. A
+      # policy silently absent from the baseline has no grants to differ on, so
+      # the check above would pass while a table lost its verified-only SELECT.
+      # Names only — no definitions — so this stays stable while bodies change.
+      - name: Triggers, policies and functions match the test project
+        env:
+          DB: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -euo pipefail
+          psql "$DB" -tA -f supabase/tests/schema-objects.sql | sed '/^$/d' | sort > /tmp/rebuilt-objects.txt
+          if ! diff -u supabase/tests/expected-schema-objects.txt /tmp/rebuilt-objects.txt > /tmp/objects.diff; then
+            echo "::error::the rebuilt database's triggers/policies/functions differ from the test project (names only)"
+            echo "--- removed by the rebuild (present in the project) ---"
+            grep -E '^-[^-]' /tmp/objects.diff | head -60 || true
+            echo "--- added by the rebuild (absent from the project) ---"
+            grep -E '^\+[^+]' /tmp/objects.diff | head -60 || true
+            exit 1
+          fi
+          echo "schema objects identical ($(wc -l < /tmp/rebuilt-objects.txt) objects: $(grep -c '^policy|' /tmp/rebuilt-objects.txt) policies, $(grep -c '^trigger|' /tmp/rebuilt-objects.txt) triggers, $(grep -c '^function|' /tmp/rebuilt-objects.txt) functions)"
+
       # Permanent guards, so the next function does not arrive with the same
       # defaults the last five did. Both read the rebuilt database, so neither
       # needs a secret or the cloud project.
@@ -292,6 +312,16 @@ jobs:
   isolation:
     name: RLS isolation (real sessions)
     runs-on: ubuntu-latest
+    # This job WRITES to the shared test project (it creates users and fixtures,
+    # and its teardown removes them). It must never be cancelled half-way: a run
+    # killed between a fixture write and its cleanup leaves the project dirty and
+    # the next run reports security failures that are really litter. The group is
+    # deliberately not keyed on github.ref — two PRs must not write to one
+    # database at the same time either.
+    concurrency:
+      group: lumora-test-project
+      cancel-in-progress: false
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -302,6 +332,40 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # Fail fast on a project left dirty by an earlier run, with a message that
+      # says what to do. Without this, a leftover column grant surfaces as three
+      # unrelated-looking security failures at the end of a 90-second suite.
+      - name: Assert the shared project is clean
+        env:
+          MGMT: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MGMT:-}" ] || [ -z "${REF:-}" ]; then
+            echo "skipping the dirty-project check: no management token in this repository"
+            exit 0
+          fi
+          dirty=$(python3 - "$REF" "$MGMT" <<'PY'
+          import json, sys, urllib.request
+          ref, tok = sys.argv[1], sys.argv[2]
+          sql = ("select count(*)::int as n from information_schema.column_privileges "
+                 "where grantee='authenticated' and table_schema='public' "
+                 "and table_name='student_alerts' and privilege_type='UPDATE' "
+                 "and column_name in ('message','basis_count','basis_kind','evidence_ids')")
+          req = urllib.request.Request(
+              "https://api.supabase.com/v1/projects/%s/database/query" % ref,
+              data=json.dumps({"query": sql}).encode(),
+              headers={"Authorization": "Bearer " + tok, "Content-Type": "application/json"})
+          print(json.load(urllib.request.urlopen(req, timeout=30))[0]["n"])
+          PY
+          )
+          echo "unexpected student_alerts UPDATE columns: $dirty"
+          if [ "$dirty" != "0" ]; then
+            echo "::error title=Shared project is dirty::The test project has column grants a previous run left behind (authenticated UPDATE on student_alerts message/basis_*), so this suite would fail for the wrong reason. Run npm run security:restore against the test project, then re-run this job."
+            exit 1
+          fi
+          echo "shared project clean"
 
       # The suite creates two throwaway accounts, so it needs credentials.
       #
@@ -349,6 +413,18 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
         run: npm run test:evidence
 
+      # Same backstop as the canary: a teardown that dies half-way leaves fixtures
+      # behind, and the next run would read them as a security finding.
+      - name: Restore schema (always)
+        if: always() && steps.creds.outputs.configured == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+          SUPABASE_MANAGEMENT_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: npm run security:restore
+
       # A canary that dies mid-run can leave a weakened policy behind. This step
       # snapshots the policy definitions before the canary and restores them
       # after, whatever happened in between.
@@ -359,6 +435,15 @@ jobs:
     # The isolation and evidence suites share one database with this job. Running
     # them concurrently would let one job's fixture satisfy another job's breach.
     needs: isolation
+    # This job writes a deliberate BREACH into the shared project and relies on
+    # its finally block to undo it. If it is cancelled between the breach and the
+    # restore, the project stays broken and the next run reports failures that
+    # have nothing to do with the code under test — which is exactly what
+    # happened once. Same non-cancelling group as isolation, for the same reason.
+    concurrency:
+      group: lumora-test-project
+      cancel-in-progress: false
+    timeout-minutes: 25
     # A security test that cannot fail proves nothing. This job injects a real
     # breach into the database, requires the isolation suite to catch it, and
     # restores the schema afterwards (in a finally block).
@@ -424,3 +509,17 @@ jobs:
           SUPABASE_MANAGEMENT_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: npm run test:canary
+
+      # Backstop, not the primary defence. The non-cancelling concurrency group
+      # above is what stops a run being killed mid-breach; `always()` cannot
+      # survive a workflow-level cancel, but it does run after a failed step and
+      # after a job timeout, which are the realistic ways this job dies.
+      - name: Restore schema (always)
+        if: always() && steps.creds.outputs.configured == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+          SUPABASE_MANAGEMENT_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: npm run security:restore

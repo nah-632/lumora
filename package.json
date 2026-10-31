@@ -10,8 +10,8 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "test": "npm run test:build && node --test tests/ai/*.test.mjs tests/security/policies.test.mjs",
-    "test:isolation": "node tests/security/isolation.mjs",
+    "test": "npm run test:build && node --test tests/ai/*.test.mjs tests/auth/*.test.mjs tests/security/policies.test.mjs",
+    "test:isolation": "node tests/security/isolation.mjs && node tests/security/isolation-curriculum.mjs && node tests/security/isolation-curriculum-invoker.mjs",
     "verify": "npm run type-check && npm run test",
     "lint": "next lint",
     "test:build": "sh build-tests.sh",
@@ -23,8 +23,10 @@
     "audit:ci": "npm audit --registry=https://registry.npmjs.org --audit-level=high"
   },
   "dependencies": {
+    "@ai-sdk/openai": "4.0.104",
     "@supabase/ssr": "0.5.2",
     "@supabase/supabase-js": "2.47.10",
+    "ai": "7.0.155",
     "next": "14.2.35",
     "next-intl": "3.26.3",
     "react": "18.3.1",
