@@ -300,5 +300,92 @@
       "10": "10",
       "15": "15"
     }
+  },
+  "scanner": {
+    "heading": "From scattered paper to a ready plan",
+    "subtext": "Pick a tool, choose your options, and get a structured draft you review and edit yourself.",
+    "caption": "Illustrative examples — not real data.",
+    "counterLabel": "Structured items",
+    "pause": "Pause motion",
+    "play": "Play motion",
+    "prev": "Previous card",
+    "next": "Next card",
+    "sceneLabel": "Before and after, in four tools:",
+    "srHint": "Use the previous and next buttons to move through the cards.",
+    "cards": [
+      {
+        "kind": "gradebook",
+        "tag": "Student tracking",
+        "rawTitle": "Gradebook",
+        "rawRows": [
+          {
+            "name": "Student 1",
+            "mark": "78"
+          },
+          {
+            "name": "Student 2",
+            "mark": "41",
+            "low": true
+          },
+          {
+            "name": "Student 3",
+            "mark": "85"
+          },
+          {
+            "name": "Student 4",
+            "mark": "39",
+            "low": true
+          },
+          {
+            "name": "Student 5",
+            "mark": "72"
+          }
+        ],
+        "resultLines": [
+          "Students: 5",
+          "Low marks: Student 2, Student 4",
+          "Need one-to-one follow-up"
+        ]
+      },
+      {
+        "kind": "trend",
+        "tag": "Smart alerts",
+        "rawTitle": "A run of marks",
+        "rawMarks": [
+          "84",
+          "67",
+          "49"
+        ],
+        "resultLines": [
+          "Alert: a repeated drop in marks",
+          "Suggested action: one-to-one follow-up",
+          "The teacher reviews it first"
+        ]
+      },
+      {
+        "kind": "page",
+        "tag": "Lesson plans",
+        "rawTitle": "Adding fractions",
+        "rawBars": 6,
+        "resultLines": [
+          "Warm-up 5 min",
+          "Explanation 15 min",
+          "Group activity 15 min",
+          "Exit assessment 10 min"
+        ],
+        "resultTotal": "45 minutes"
+      },
+      {
+        "kind": "worksheet",
+        "tag": "Exam creation",
+        "rawTitle": "Worksheet",
+        "rawBars": 5,
+        "resultLines": [
+          "5 questions · multiple choice",
+          "Level: medium",
+          "Answer key attached"
+        ]
+      }
+    ]
   }
 }

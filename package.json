@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "test": "npm run test:build && node --test tests/ai/*.test.mjs tests/auth/*.test.mjs tests/security/policies.test.mjs",
+    "test": "npm run test:build && node --test tests/ai/*.test.mjs tests/auth/*.test.mjs tests/ui/*.test.mjs tests/security/policies.test.mjs",
     "test:isolation": "node tests/security/isolation.mjs && node tests/security/isolation-curriculum.mjs && node tests/security/isolation-curriculum-invoker.mjs",
     "verify": "npm run type-check && npm run test",
     "lint": "next lint",
@@ -20,7 +20,8 @@
     "test:smoke": "playwright test --config=playwright.config.mjs",
     "security:restore": "node tests/security/restore.mjs",
     "test:security:open": "node tests/security/open-cases.mjs",
-    "audit:ci": "npm audit --registry=https://registry.npmjs.org --audit-level=high"
+    "audit:ci": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
+    "shots:scanner": "node tests/shots/scanner-shots.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "4.0.104",

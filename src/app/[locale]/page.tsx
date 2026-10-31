@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import "@/styles/landing.css";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { Hero } from "@/components/landing/Hero";
+import { ScannerSection } from "@/components/landing/ScannerSection";
 import { Features } from "@/components/landing/Features";
 import { HowItWorks, Showcase, AboutContact } from "@/components/landing/Sections";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -40,6 +41,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       <SiteHeader locale={locale} />
       <main>
         <Hero locale={locale} />
+        <ScannerSection locale={locale} />
         <Features locale={locale} />
         <HowItWorks locale={locale} />
         <Showcase locale={locale} />

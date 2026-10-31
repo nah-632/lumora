@@ -1,0 +1,508 @@
+/* ==========================================================================
+   The scanner belt
+   One section on the landing page: raw paper on one side of a red line, the
+   structured draft on the other.
+
+   Everything here is expressed in custom properties so the first paint is the
+   finished composition, with no JavaScript: `--i` per card is the only input,
+   and the position, the clip and the seam fall out of it in CSS. The engine
+   then writes the same three values in pixels (see ScannerBelt.tsx).
+
+   The clip rules below are the server-rendered twin of `clipFor()` in
+   src/features/scanner/engine.ts — four lines each, and the unit test asserts
+   the function's output matches, so they cannot drift apart silently.
+   ========================================================================== */
+
+.scanner-section {
+  /* Geometry. Desktop: a 46vw card, 4.75vw gap, 52vh tall. */
+  --w: 46vw;
+  --h: 52vh;
+  --gap: 4.75vw;
+  --s: calc(var(--w) + var(--gap));
+  --radius: 16px;
+  /* How far the dissolve softens the paper at the seam. */
+  --seam: 24px;
+  /* Card surface. White is a DESIGN.md surface token, not a new value. */
+  --paper-card: #ffffff;
+  --line-x: 50%;
+
+  position: relative;
+  overflow-x: clip;
+  background: var(--lumora-paper);
+  padding-block: clamp(3rem, 1.6rem + 4.6vw, 5rem);
+}
+
+/* The only direction switch in the section: which way flow runs, and which
+   edge of the card box the leading edge sits on. */
+[dir="rtl"] .scanner-section {
+  --dir: -1;
+  --edge: 0px;
+  --fade-to: left;
+}
+[dir="ltr"] .scanner-section {
+  --dir: 1;
+  --edge: var(--w);
+  --fade-to: right;
+}
+
+.scanner-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 62ch;
+}
+.scanner-sub {
+  color: var(--lumora-ink-soft);
+  font-size: clamp(1rem, 0.95rem + 0.2vw, 1.0625rem);
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------------------------- stage --- */
+
+.scanner {
+  margin-top: clamp(2rem, 1rem + 2.4vw, 3rem);
+}
+
+.scanner-stage {
+  position: relative;
+  height: calc(var(--h) + 96px);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.scanner-stage:active {
+  cursor: grabbing;
+}
+
+.scanner-layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* The result layer fades toward the far edge of the stage. This is an ALPHA
+   mask: it paints no colour and adds no gradient to the design. */
+.scanner-results {
+  z-index: 0;
+  -webkit-mask-image: linear-gradient(to var(--fade-to), #000 58%, transparent 100%);
+  mask-image: linear-gradient(to var(--fade-to), #000 58%, transparent 100%);
+}
+.scanner-cards {
+  z-index: 1;
+}
+
+.scanner-item {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: var(--w);
+  height: var(--h);
+  /* Flow: u = how far the leading edge is past the line. 12% of a card on the
+     first frame, one span per card behind it. */
+  --u: calc(0.12 * var(--w) - var(--i) * var(--s));
+  --left: calc(50% + var(--dir) * var(--u) - var(--edge));
+  --cut: clamp(0px, var(--u), var(--w));
+  --rest: calc(var(--w) - var(--cut));
+  transform: translate3d(var(--left), -50%, 0);
+  will-change: transform;
+}
+
+.scanner-card,
+.scanner-twin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--lumora-navy) 14%, transparent);
+  padding: calc(var(--w) * 0.046);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.scanner-card[data-tone="paper"],
+.scanner-twin[data-tone="paper"] {
+  background: var(--paper-card);
+  color: var(--lumora-navy);
+}
+
+.scanner-card[data-tone="navy"],
+.scanner-twin[data-tone="navy"] {
+  background: var(--lumora-navy);
+  color: var(--lumora-paper);
+  border-color: color-mix(in srgb, var(--lumora-paper) 18%, transparent);
+}
+
+/* The card keeps everything that has not crossed; the twin keeps exactly what
+   has. Together they are one document split at the line. */
+[dir="rtl"] .scanner-card {
+  clip-path: inset(0 0 0 var(--cut) round var(--radius));
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--seam));
+  mask-image: linear-gradient(to right, transparent 0, #000 var(--seam));
+}
+[dir="ltr"] .scanner-card {
+  clip-path: inset(0 var(--cut) 0 0 round var(--radius));
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 var(--seam));
+  mask-image: linear-gradient(to left, transparent 0, #000 var(--seam));
+}
+[dir="rtl"] .scanner-twin {
+  clip-path: inset(0 var(--rest) 0 0 round var(--radius));
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 var(--seam));
+  mask-image: linear-gradient(to left, transparent 0, #000 var(--seam));
+}
+[dir="ltr"] .scanner-twin {
+  clip-path: inset(0 0 0 var(--rest) round var(--radius));
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--seam));
+  mask-image: linear-gradient(to right, transparent 0, #000 var(--seam));
+}
+
+/* The seam itself: a 4px solid red line, a soft red glow, and two solid caps.
+   No halo, no haze: what lights the card side is the particle density. */
+.scanner-line {
+  position: absolute;
+  z-index: 2;
+  top: 6%;
+  bottom: 6%;
+  left: calc(var(--line-x) - 2px);
+  width: 4px;
+  background: var(--lumora-red);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--lumora-red) 42%, transparent);
+  border-radius: 2px;
+}
+.scanner-line::before,
+.scanner-line::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  width: 12px;
+  height: 6px;
+  background: var(--lumora-red);
+  border-radius: 3px;
+}
+.scanner-line::before {
+  top: -6px;
+}
+.scanner-line::after {
+  bottom: -6px;
+}
+
+.scanner-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------- counter --- */
+
+.scanner-counter-rail {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: var(--line-x);
+  height: 0;
+}
+.scanner-counter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--lumora-navy) 22%, transparent);
+  transform: translate3d(-50%, 0, 0);
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.6;
+  will-change: transform;
+}
+.scanner-counter-value {
+  background: var(--lumora-navy);
+  color: var(--lumora-paper);
+  font-weight: 600;
+  padding: 6px 12px;
+  min-width: 40px;
+  text-align: center;
+}
+.scanner-counter-gap {
+  width: 1px;
+  background: var(--lumora-gold);
+  flex: 0 0 1px;
+}
+.scanner-counter-label {
+  background: var(--lumora-paper);
+  color: var(--lumora-navy);
+  font-weight: 500;
+  padding: 6px 14px;
+}
+
+/* ------------------------------------------------------------ card type --- */
+
+.scanner-card-tag {
+  font-size: clamp(11px, 2.1cqw, 13px);
+  font-weight: 500;
+  color: color-mix(in srgb, currentColor 62%, transparent);
+  margin: 0 0 calc(var(--w) * 0.012);
+  letter-spacing: 0;
+}
+[lang="ar"] .scanner-card-tag {
+  line-height: 1.6;
+}
+
+.scanner-card-title {
+  font-family: var(--font-display);
+  font-size: clamp(14px, 3.2cqw, 24px);
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+[lang="ar"] .scanner-card-title {
+  line-height: 1.6;
+}
+
+/* The thin gold rule under every card title. Decoration only. */
+.scanner-card-rule {
+  display: block;
+  width: calc(var(--w) * 0.12);
+  height: 1px;
+  background: var(--lumora-gold);
+  margin-block: calc(var(--w) * 0.016) calc(var(--w) * 0.032);
+}
+
+/* Gradebook rows */
+.scanner-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.scanner-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-block: calc(var(--w) * 0.011);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  font-size: clamp(11px, 2.3cqw, 15px);
+}
+[lang="ar"] .scanner-row {
+  line-height: 1.6;
+}
+.scanner-row:last-child {
+  border-bottom: 0;
+}
+.scanner-row-mark {
+  font-weight: 600;
+}
+/* A low mark is tinted with red, which is the raw fact the result line names. */
+.scanner-row[data-low="true"] .scanner-row-mark {
+  color: var(--lumora-red);
+}
+.scanner-card[data-tone="navy"] .scanner-row[data-low="true"] .scanner-row-mark {
+  color: #f2776c;
+}
+
+/* Three marks falling in a row */
+.scanner-trend {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: calc(var(--w) * 0.05);
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: calc(var(--w) * 0.02);
+}
+.scanner-mark {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--w) * 0.012);
+}
+.scanner-mark-value {
+  font-size: clamp(11px, 2.2cqw, 14px);
+  font-weight: 600;
+  color: color-mix(in srgb, currentColor 78%, transparent);
+}
+.scanner-mark-bar {
+  width: 100%;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  height: calc((3 - var(--k)) * var(--w) * 0.028);
+}
+.scanner-mark[data-last="true"] .scanner-mark-bar {
+  background: color-mix(in srgb, var(--lumora-red) 55%, transparent);
+}
+.scanner-trend-line {
+  position: absolute;
+  inset-inline: 2%;
+  bottom: calc(var(--w) * 0.055);
+  height: 2px;
+  background: color-mix(in srgb, var(--lumora-red) 70%, transparent);
+  transform: rotate(calc(var(--dir) * -13deg));
+  transform-origin: center;
+}
+
+/* A textbook page and a blank worksheet: grey bars, no invented text */
+.scanner-lines {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--w) * 0.022);
+  padding-top: calc(var(--w) * 0.008);
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+.scanner-line {
+  display: block;
+  height: clamp(5px, 1.1cqw, 8px);
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  width: 100%;
+}
+.scanner-line:nth-child(3n + 1) {
+  width: 92%;
+}
+.scanner-line:nth-child(3n + 2) {
+  width: 76%;
+}
+.scanner-line:nth-child(4n) {
+  width: 58%;
+}
+.scanner-lines[data-kind="worksheet"] .scanner-line {
+  height: 1px;
+  border-radius: 0;
+  background: color-mix(in srgb, currentColor 26%, transparent);
+}
+.scanner-lines[data-kind="worksheet"] .scanner-line:nth-child(2n) {
+  width: 100%;
+}
+.scanner-lines[data-kind="worksheet"] .scanner-line:nth-child(2n + 1) {
+  width: 84%;
+}
+
+/* The structured draft */
+.scanner-results-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--w) * 0.020);
+}
+.scanner-result-line {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--w) * 0.014);
+  font-size: clamp(11px, 2.35cqw, 15px);
+  line-height: 1.6;
+}
+[lang="ar"] .scanner-result-line {
+  line-height: 1.7;
+}
+.scanner-bullet {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  margin-top: 0.62em;
+  border-radius: 50%;
+  background: var(--lumora-gold);
+}
+.scanner-card[data-tone="navy"] .scanner-bullet,
+.scanner-twin[data-tone="navy"] .scanner-bullet {
+  background: var(--lumora-gold);
+}
+.scanner-result-total {
+  margin-top: auto;
+  padding-top: calc(var(--w) * 0.02);
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  font-size: clamp(11px, 2.2cqw, 14px);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------- controls --- */
+
+.scanner-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.scanner-btn {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--lumora-navy) 20%, transparent);
+  background: var(--paper-card);
+  color: var(--lumora-navy);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.scanner-btn:hover {
+  border-color: color-mix(in srgb, var(--lumora-navy) 45%, transparent);
+}
+.scanner-btn:active {
+  transform: scale(0.97);
+}
+.scanner-btn-play {
+  background: var(--lumora-navy);
+  color: var(--lumora-paper);
+  border-color: var(--lumora-navy);
+}
+.scanner-btn-play:hover {
+  background: color-mix(in srgb, var(--lumora-navy) 88%, #000);
+}
+/* Chevrons point along the belt: previous is on the entry side, in both
+   languages, because the row mirrors with the page. */
+[dir="rtl"] .scanner-btn svg {
+  transform: scaleX(-1);
+}
+
+.scanner-caption {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--lumora-ink-soft);
+}
+
+/* --------------------------------------------------------------- mobile --- */
+
+@media (max-width: 767px) {
+  .scanner-section {
+    --w: 84vw;
+    --h: 54vw;
+    --gap: 7vw;
+  }
+  .scanner-stage {
+    /* Card height plus a hair, so the card reads as top-aligned on a phone. */
+    height: calc(var(--h) + 16px);
+  }
+  .scanner-line {
+    top: 2%;
+    bottom: 2%;
+  }
+  .scanner-counter {
+    font-size: 11px;
+  }
+  .scanner-counter-value {
+    padding: 5px 10px;
+    min-width: 34px;
+  }
+  .scanner-counter-label {
+    padding: 5px 12px;
+  }
+  .scanner-btn {
+    width: 44px;
+    height: 44px;
+  }
+}

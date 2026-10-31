@@ -13,6 +13,10 @@ fi
 
 mkdir -p build-test
 
+"$ESBUILD" src/features/scanner/engine.ts \
+  --bundle --format=esm --platform=node \
+  --outfile=build-test/scanner-engine.mjs --log-level=warning
+
 "$ESBUILD" src/features/students/lib/signals.ts \
   --bundle --format=esm --platform=node \
   --outfile=build-test/signals.mjs --log-level=warning
