@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "test": "npm run test:build && node --test tests/ai/*.test.mjs tests/auth/*.test.mjs tests/security/policies.test.mjs",
+    "test": "npm run test:build && node --test tests/ai/*.test.mjs tests/auth/*.test.mjs tests/ui/*.test.mjs tests/security/policies.test.mjs",
     "test:isolation": "node tests/security/isolation.mjs && node tests/security/isolation-curriculum.mjs && node tests/security/isolation-curriculum-invoker.mjs",
     "verify": "npm run type-check && npm run test",
     "lint": "next lint",
