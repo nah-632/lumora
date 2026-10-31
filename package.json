@@ -20,7 +20,8 @@
     "test:smoke": "playwright test --config=playwright.config.mjs",
     "security:restore": "node tests/security/restore.mjs",
     "test:security:open": "node tests/security/open-cases.mjs",
-    "audit:ci": "npm audit --registry=https://registry.npmjs.org --audit-level=high"
+    "audit:ci": "npm audit --registry=https://registry.npmjs.org --audit-level=high",
+    "shots:scanner": "node tests/shots/scanner-shots.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "4.0.104",

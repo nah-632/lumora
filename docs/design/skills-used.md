@@ -25,14 +25,14 @@ which, so nobody has to guess later why the code looks the way it does.
 They do not exist at `/var/minis/skills/` under those names (checked). No
 substitute was pretended into existence: the closest installed skills were used
 (`impeccable` for design review, `performance-optimization` for the budget,
-`superpowers` for the completion gate), and their absence is part of why the
-visual and performance verification below is owed rather than delivered.
+`superpowers` for the completion gate), and their absence is why the visual and
+performance verification below is owed rather than delivered.
 
 ## Conflicts, and how they were resolved
 
 1. **`lumora-design` requires Motion (motion.dev) for sequences. The brief forbids
    new dependencies.** → No animation library. The belt is a `requestAnimationFrame`
-   loop using `transform`, `clip-path` and canvas pixels only. Consequence: the
+   loop with `transform`, `clip-path` and canvas pixels only. Consequence: the
    entrance is hand-written, and it is the part of this section with the most code
    that is not React.
 
@@ -40,8 +40,8 @@ visual and performance verification below is owed rather than delivered.
    The brief asks for an alpha mask that softens the seam and fades the result
    layer. → Both are `mask-image` gradients, which paint **no colour**: they are
    alpha only, so no gradient is visible anywhere in the section. The alternative
-   the brief offered (JS-computed opacity) was rejected: it needs a per-frame
-   opacity write on eight elements and still does not produce a soft edge.
+   the brief offered (JS-computed opacity) was rejected: it would need a
+   per-frame opacity write on eight elements and still not produce a soft edge.
    **Choice: alpha `mask-image`.**
 
 3. **`lumora-design` says Motion last, after layout and typography.** Kept — the
@@ -49,24 +49,17 @@ visual and performance verification below is owed rather than delivered.
    once the geometry has been measured.
 
 4. **The brief says "tokens only, no new hex values".** The paper card surface
-   uses `#ffffff`, which `DESIGN.md` lists as a surface token but which has no CSS
-   variable in `landing.css`. It is declared once, with a comment, as
-   `--paper-card`; every other colour is a token or a `color-mix()` tint of one.
-
-5. **`docs/design/` could not be created in the working tree** (the sandbox's
-   filesystem rejects that directory name with `EEXIST` while `stat` says it does
-   not exist). The file was staged at this path through the git index instead, so
-   it is in the commit and on GitHub exactly where the brief asked for it. A local
-   `git status` in the sandbox may show it as deleted; that is the sandbox, not
-   the commit.
+   uses `#ffffff`, which is a surface token in `DESIGN.md` but has no CSS variable
+   in `landing.css`. It is declared once, with a comment, as `--paper-card`; every
+   other colour is a token or a `color-mix()` tint of one.
 
 ## What was verified, and what was not
 
-Verified locally on this device: `tsc --noEmit` clean · `next lint` clean (three
+Verified locally (this device): `tsc --noEmit` clean · `next lint` clean (three
 pre-existing `<img>` warnings, none new) · 29 new unit tests pass, and the full
-suite passes (267 tests, 0 fail).
+suite passes (267 tests).
 
 **Not** verified locally: `next build`, Playwright screenshots at 360/390/768/1440,
-the 4× CPU frame-time p95, and Lighthouse before/after. This device hangs on a
-Next build and cannot run Playwright; the brief's instruction is to let CI do it.
-They are owed, not done.
+the 4× CPU frame-time p95, and Lighthouse before/after. This device cannot run a
+Next build or a browser without hanging; the brief's own instruction is to let CI
+do it. They are owed, not done — the PR says so in its own words.
