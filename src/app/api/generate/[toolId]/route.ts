@@ -47,6 +47,23 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
+ * Wall-clock budget for one generation request.
+ *
+ * A lesson plan takes 8–30 s on the providers measured, and a reasoning model
+ * that truncates and retries can approach a minute. The platform default would
+ * kill the function long before that, so the ceiling is stated here rather than
+ * inherited: 60 s is the maximum a Hobby deployment can be given, and this is
+ * the route that needs it.
+ *
+ * This value and the request timeout below are a pair. The abort must fire
+ * BEFORE the platform kills the function, so the caller gets a classified
+ * `provider_unavailable` from our code instead of an opaque platform timeout
+ * with no body. Keeping the abort longer than the budget would make our own
+ * error handling unreachable on exactly the slow requests it exists for.
+ */
+export const maxDuration = 60;
+
+/**
  * The tool ids whose output is a written artefact a teacher may hand out.
  *
  * Only these get curriculum grounding and a references block. `questions` is a
@@ -325,7 +342,11 @@ function httpGenerator(
           // A generation can legitimately take a while on a busy provider, but
           // not forever. Without this a hung request holds a slot and the
           // teacher waits with no way to tell the difference from slow work.
-          signal: AbortSignal.timeout(90_000),
+          //
+          // 55 s, not 90: see `maxDuration` above. The platform kills the
+          // function at 60 s, so an abort that never fires first would turn our
+          // clean `provider_unavailable` into an opaque 504.
+          signal: AbortSignal.timeout(55_000),
         });
       } catch {
         // A transport failure. No body to inspect, so it is a generic outage.
