@@ -149,20 +149,12 @@ alter table public.curriculum_sources
     default 'supplementary_unverified'::public.curriculum_source_kind;
 alter table public.curriculum_sources
   add column if not exists base_url text;
+alter table public.curriculum_sources
+  add column if not exists verification_note text;
 
-create table if not exists public.pedagogical_activities (
-  id uuid default gen_random_uuid() not null,
-  subject text not null,
-  topic text,
-  activity_name text not null,
-  activity_type text not null,
-  description text not null,
-  materials_needed text,
-  grade_level smallint,
-  created_by uuid,
-  created_at timestamp with time zone default now() not null,
-  updated_at timestamp with time zone default now() not null
-);
+-- pedagogical_activities was added by 0017 and dropped by 0019: it held no rows
+-- and nothing read it. Removed from the baseline so a rebuild does not recreate
+-- a table the project does not have.
 create table if not exists public.generation_runs (
   id uuid default gen_random_uuid() not null,
   user_id uuid not null,
@@ -639,7 +631,7 @@ returns table (
 )
 language sql
 stable
-security definer
+security invoker
 set search_path = ''
 as $function$
   with matched as (
@@ -708,8 +700,6 @@ alter table public.curriculum_chunks add constraint curriculum_chunks_document_i
 alter table public.curriculum_chunks add constraint curriculum_chunks_pkey PRIMARY KEY (id);
 alter table public.curriculum_documents add constraint curriculum_documents_pkey PRIMARY KEY (id);
 alter table public.curriculum_sources add constraint curriculum_sources_pkey PRIMARY KEY (id);
-alter table public.pedagogical_activities add constraint pedagogical_activities_pkey PRIMARY KEY (id);
-alter table public.pedagogical_activities add constraint pedagogical_activities_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
 
 alter table public.generation_runs add constraint generation_runs_pkey PRIMARY KEY (id);
 alter table public.messages add constraint messages_pkey PRIMARY KEY (id);
@@ -736,7 +726,6 @@ alter table public.curriculum_documents add constraint curriculum_documents_sour
 alter table public.curriculum_sources add constraint curriculum_sources_verified_by_fkey FOREIGN KEY (verified_by) REFERENCES auth.users(id) ON DELETE SET NULL;
 alter table public.curriculum_documents add constraint curriculum_documents_term_check check (term is null or term between 1 and 3);
 alter table public.curriculum_documents add constraint curriculum_documents_grade_level_check check (grade_level is null or grade_level between 1 and 12);
-alter table public.pedagogical_activities add constraint pedagogical_activities_grade_level_check check (grade_level is null or grade_level between 1 and 12);
 
 alter table public.generation_runs add constraint generation_runs_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE;
 alter table public.messages add constraint messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE;
@@ -799,7 +788,6 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON public.audit_logs USING btre
 CREATE INDEX IF NOT EXISTS idx_conversations_user_created ON public.conversations USING btree (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_curriculum_documents_source ON public.curriculum_documents USING btree (source_id);
 CREATE INDEX IF NOT EXISTS idx_curriculum_documents_lookup ON public.curriculum_documents USING btree (grade_level, term, lesson_topic);
-CREATE INDEX IF NOT EXISTS idx_pedagogical_activities_lookup ON public.pedagogical_activities USING btree (subject, grade_level, topic);
 
 CREATE INDEX IF NOT EXISTS idx_generation_runs_status ON public.generation_runs USING btree (status) WHERE (status = ANY (ARRAY['queued'::generation_status, 'running'::generation_status]));
 CREATE INDEX IF NOT EXISTS idx_generation_runs_user_created ON public.generation_runs USING btree (user_id, created_at DESC);
@@ -842,8 +830,6 @@ alter table public.curriculum_documents enable row level security;
 alter table public.curriculum_documents force row level security;
 alter table public.curriculum_sources enable row level security;
 alter table public.curriculum_sources force row level security;
-alter table public.pedagogical_activities enable row level security;
-alter table public.pedagogical_activities force row level security;
 
 alter table public.generation_runs enable row level security;
 alter table public.generation_runs force row level security;
@@ -878,10 +864,6 @@ create policy conversations_update_own on public.conversations as PERMISSIVE for
 create policy curriculum_sources_select_verified on public.curriculum_sources as PERMISSIVE for select to authenticated using (verified_at is not null);
 create policy curriculum_documents_select_verified on public.curriculum_documents as PERMISSIVE for select to authenticated using (exists (select 1 from public.curriculum_sources s where s.id = curriculum_documents.source_id and s.verified_at is not null));
 create policy curriculum_chunks_select_verified on public.curriculum_chunks as PERMISSIVE for select to authenticated using (exists (select 1 from public.curriculum_documents d join public.curriculum_sources s on s.id = d.source_id where d.id = curriculum_chunks.document_id and s.verified_at is not null));
-create policy pedagogical_activities_select_auth on public.pedagogical_activities as PERMISSIVE for select to authenticated using (true);
-create policy pedagogical_activities_write_staff on public.pedagogical_activities as PERMISSIVE for insert to authenticated with check (is_staff(auth.uid()));
-create policy pedagogical_activities_update_staff on public.pedagogical_activities as PERMISSIVE for update to authenticated using (is_staff(auth.uid())) with check (is_staff(auth.uid()));
-create policy pedagogical_activities_delete_staff on public.pedagogical_activities as PERMISSIVE for delete to authenticated using (is_staff(auth.uid()));
 create policy curriculum_chunks_write_staff on public.curriculum_chunks as PERMISSIVE for insert to authenticated with check (is_staff(auth.uid()));
 create policy curriculum_docs_update_staff on public.curriculum_documents as PERMISSIVE for update to authenticated using (is_staff(auth.uid())) with check (is_staff(auth.uid()));
 create policy curriculum_docs_write_staff on public.curriculum_documents as PERMISSIVE for insert to authenticated with check (is_staff(auth.uid()));
@@ -990,7 +972,6 @@ revoke all on table public."conversations" from anon, authenticated;
 revoke all on table public."curriculum_chunks" from anon, authenticated;
 revoke all on table public."curriculum_documents" from anon, authenticated;
 revoke all on table public."curriculum_sources" from anon, authenticated;
-revoke all on table public."pedagogical_activities" from anon, authenticated;
 revoke all on table public."generation_runs" from anon, authenticated;
 revoke all on table public."messages" from anon, authenticated;
 revoke all on table public."profiles" from anon, authenticated;
@@ -1039,10 +1020,6 @@ grant select on table public."curriculum_documents" to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on table public."curriculum_documents" to service_role;
 grant select on table public."curriculum_sources" to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on table public."curriculum_sources" to service_role;
--- pedagogical_activities: a teacher can read, insert, update and delete their
--- own activities (RLS gates them); anon holds nothing.
-grant select, insert, update, delete on table public."pedagogical_activities" to authenticated;
-grant delete, insert, maintain, references, select, trigger, truncate, update on table public."pedagogical_activities" to service_role;
 grant delete, insert, maintain, references, select, trigger, truncate, update on table public."generation_runs" to anon;
 grant delete, insert, maintain, references, select, trigger, truncate, update on table public."generation_runs" to authenticated;
 grant delete, insert, maintain, references, select, trigger, truncate, update on table public."generation_runs" to service_role;

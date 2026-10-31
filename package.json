@@ -11,7 +11,7 @@
     "start": "next start",
     "type-check": "tsc --noEmit",
     "test": "npm run test:build && node --test tests/ai/*.test.mjs tests/security/policies.test.mjs",
-    "test:isolation": "node tests/security/isolation.mjs && node tests/security/isolation-curriculum.mjs",
+    "test:isolation": "node tests/security/isolation.mjs && node tests/security/isolation-curriculum.mjs && node tests/security/isolation-curriculum-invoker.mjs",
     "verify": "npm run type-check && npm run test",
     "lint": "next lint",
     "test:build": "sh build-tests.sh",

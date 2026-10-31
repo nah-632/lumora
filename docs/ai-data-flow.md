@@ -179,10 +179,10 @@ for a name in a generated payload.
 ## 6. What is stored and logged
 
 **Stored: nothing generated.** The feature adds no generation table, no log and
-no cache. The 0017/0018 migrations add *source* tables (`pedagogical_activities`,
-and columns on `curriculum_sources`/`curriculum_documents`) that staff write and
-teachers read — the model's draft lives only in the browser's React state until
-the teacher copies,
+no cache. The 0017/0018/0019 migrations add columns on
+`curriculum_sources`/`curriculum_documents` that staff write and teachers read —
+the model's draft lives only in the browser's React state until the teacher
+copies,
 prints or navigates away. Reloading the page loses it, which is the honest
 behaviour for something described as a draft.
 
