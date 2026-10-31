@@ -3,7 +3,7 @@
 import { useActionState } from "@/lib/react/useActionState";
 import type { AuthResult } from "@/lib/auth/types";
 
-type Mode = "sign-in" | "sign-up" | "reset";
+type Mode = "sign-in" | "sign-up" | "reset" | "update";
 
 interface Props {
   mode: Mode;
@@ -45,26 +45,30 @@ export function AuthForm({ mode, locale, labels, action, next }: Props) {
         </div>
       )}
 
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium">{labels.email}</label>
-        <input
-          id="email" name="email" type="email" required maxLength={254}
-          autoComplete="email" dir="ltr"
-          className="mt-1 w-full rounded-md border border-[var(--lumora-line)] px-3 py-2 text-sm"
-        />
-      </div>
+      {/* "update" is reached only with a session already established by the
+          recovery link, so asking for the address again would be noise. */}
+      {mode !== "update" && (
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium">{labels.email}</label>
+          <input
+            id="email" name="email" type="email" required maxLength={254}
+            autoComplete="email" dir="ltr"
+            className="mt-1 w-full rounded-md border border-[var(--lumora-line)] px-3 py-2 text-sm"
+          />
+        </div>
+      )}
 
       {mode !== "reset" && (
         <div>
           <label htmlFor="password" className="block text-sm font-medium">{labels.password}</label>
           <input
             id="password" name="password" type="password" required
-            minLength={mode === "sign-up" ? 8 : 1} maxLength={128}
-            autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+            minLength={mode === "sign-up" || mode === "update" ? 8 : 1} maxLength={128}
+            autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
             dir="ltr"
             className="mt-1 w-full rounded-md border border-[var(--lumora-line)] px-3 py-2 text-sm"
           />
-          {mode === "sign-up" && (
+          {(mode === "sign-up" || mode === "update") && (
             <p className="mt-1 text-xs text-[var(--lumora-ink-soft)]">{labels.passwordHint}</p>
           )}
         </div>
@@ -73,6 +77,11 @@ export function AuthForm({ mode, locale, labels, action, next }: Props) {
       {state?.ok && mode === "reset" && (
         <p role="status" className="rounded-sm bg-success/10 px-3 py-2 text-sm text-success">
           {labels.resetSent}
+        </p>
+      )}
+      {state?.ok && mode === "update" && (
+        <p role="status" className="rounded-sm bg-success/10 px-3 py-2 text-sm text-success">
+          {labels.updated}
         </p>
       )}
       {state?.ok && mode === "sign-up" && (
