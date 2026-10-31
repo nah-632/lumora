@@ -96,3 +96,27 @@ mkdir -p build-test
   --outfile=build-test/specs.mjs --log-level=warning
 
 echo "build-test OK"
+
+# Auth callback redirect rules: `next` is user-controlled, so the allow-list is
+# a pure function and is tested as one.
+"$ESBUILD" src/lib/auth/redirect.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/auth-redirect.mjs --log-level=warning
+
+# Locale choice for the bare domain, the auth-origin allow-list, the callback's
+# decision logic and the password rules. All pure: no next, no client, no network.
+"$ESBUILD" src/lib/i18n/locale.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/locale.mjs --log-level=warning
+
+"$ESBUILD" src/lib/auth/origin.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/auth-origin.mjs --log-level=warning
+
+"$ESBUILD" src/lib/auth/callback-core.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/auth-callback.mjs --log-level=warning
+
+"$ESBUILD" src/lib/auth/update-password.ts \
+  --bundle --format=esm --platform=node --alias:@=./src \
+  --outfile=build-test/update-password.mjs --log-level=warning
