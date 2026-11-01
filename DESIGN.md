@@ -45,3 +45,32 @@ designed empty states, and error states that say what to do next.
 ## Anti-patterns banned here
 Gradient blobs, emoji as icons, identical three-card grids, fake statistics,
 testimonials, placeholder partner logos, and any trace of automated generation.
+
+## Owner-approved landing exceptions (2026-11-01)
+
+The landing page's first screen — header, hero, the four tool cards and the
+benefit strip — was rebuilt to the owner's reference mockup. The owner approved
+the following on that surface, and **only** on that surface. They are not a
+general relaxation of this document:
+
+- Gradients (the gold button ramp, the logo plate, the card glows).
+- Glass-like translucent cards (`backdrop-filter` from 768px up, where
+  supported; a solid 92% white card everywhere else).
+- Gold buttons and gold accents, including gold carrying the button label.
+- A purple-and-gold treatment around a photographic hero background.
+
+Still binding on that surface, unchanged: El Messiri / IBM Plex Sans Arabic /
+IBM Plex Sans only; Arabic takes no letter-spacing and no italics; body
+line-height ≥ 1.6 and the display headline ≥ 1.15; no text under 12px; AA
+contrast; 44px tap targets; reduced motion; the logo is never recoloured or
+redrawn.
+
+Seven extension tokens were added for it — `purple-900`, `purple-800`,
+`lavender-100`, `lavender-300`, `gold-300`, `gold-500`, `gold-700`. Every one is
+**measured** from the reference, not chosen; the values, the sampling positions
+and the measured text contrast are recorded in
+[`docs/design/premium-brief.md`](docs/design/premium-brief.md).
+
+The base rule that gold never carries body text still holds everywhere else.
+Inside the landing surface the gold button carries its label at 10.6:1, which is
+a measurement rather than an exemption.

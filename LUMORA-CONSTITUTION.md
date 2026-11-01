@@ -93,6 +93,18 @@ measured with a script, including badges, chips and button text; set explicit co
 styled button. Focus rings use navy or purple (with a gold outer line only on dark surfaces).
 Provide a dark theme that preserves the identity.
 
+**Owner-approved exception — the landing page only (2026-11-01).** The landing page's first
+screen was rebuilt to the owner's reference mockup, and the owner approved gradients,
+glass-like translucent cards, gold buttons and gold accents, a purple-and-gold treatment, and a
+photographic hero background **on that surface alone**. Seven extension tokens were added for
+it: `purple-900` `#23033F`, `purple-800` `#2F0B49`, `lavender-100` `#F5E9F4`, `lavender-300`
+`#E7D1E5`, `gold-300` `#FAD28F`, `gold-500` `#F1BD70`, `gold-700` `#E8AA57`. Each is measured
+from the reference pixels rather than chosen; the sampling positions and the measured text
+contrast are recorded in `docs/design/premium-brief.md`. Everything else in this section still
+binds there — the type families, the Arabic typography rules, the 12px floor, AA contrast,
+44px targets, reduced motion, and the untouchable logo. No other page may use these tokens or
+these treatments.
+
 ### 3.2 Luxury and professional design direction
 
 A premium product: calm, precise, expensive-feeling.
