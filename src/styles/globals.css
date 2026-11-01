@@ -32,6 +32,18 @@
   --lumora-ink-soft: #5a6675;
   --lumora-line: #e3e7ec;
   --focus: #DA291C;
+
+  /* Landing-page extension tokens — OWNER-APPROVED for the landing page only
+     (2026-11-01). Gradient, glass and gold treatments are permitted there and
+     nowhere else. Values are measured from the reference mockup; the sampling
+     positions are in docs/design/premium-brief.md. */
+  --lumora-purple-900: #23033F;
+  --lumora-purple-800: #2F0B49;
+  --lumora-lavender-100: #F5E9F4;
+  --lumora-lavender-300: #E7D1E5;
+  --lumora-gold-300: #FAD28F;
+  --lumora-gold-500: #F1BD70;
+  --lumora-gold-700: #E8AA57;
 }
 
 html {

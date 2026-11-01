@@ -25,6 +25,12 @@ Clean, editorial, whitespace-first. Adapted from the supplied "Clean" guidelines
 - Rule of three: **white/off-white + navy + red**. Purple is for interaction states, gold for rare decoration.
 - Tints for icon discs: navy, red and purple at about 8% opacity on white.
 - **No gradients in the UI.** The only gradients: the hero image's own fade, and the official logo.
+  - **Owner-approved exception, landing page only (2026-11-01):** the landing page's first screen
+    now uses gradients, glass-like translucent cards, gold buttons and gold accents, a
+    purple-and-gold treatment, and a photographic hero background. Seven measured extension tokens
+    were added (`purple-900`, `purple-800`, `lavender-100`, `lavender-300`, `gold-300`, `gold-500`,
+    `gold-700`). The type rules, the 12px floor, AA contrast, 44px targets, reduced motion and the
+    untouchable logo all still apply there. Measurements: `docs/design/premium-brief.md`.
 - Contrast: all text at WCAG AA or better; verify navy/red/purple pairs and any text over the hero image with a contrast checker.
 
 ## Typography

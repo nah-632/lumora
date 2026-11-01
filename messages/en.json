@@ -300,5 +300,71 @@
       "10": "10",
       "15": "15"
     }
+  },
+  "landing": {
+    "nav": {
+      "tools": "Tools",
+      "benefits": "Benefits"
+    },
+    "signIn": "Sign in",
+    "getStarted": "Get started",
+    "discover": "Learn more",
+    "badge": "AI tools for teachers",
+    "headline": {
+      "line1": "We elevate the teacher,",
+      "line2": "to elevate the nation."
+    },
+    "subtext": "Smart, easy-to-use tools designed for intermediate-stage teachers in Bahrain.",
+    "chips": {
+      "noChat": "No chat, just tap your choices",
+      "studentName": "The student-name field isn't sent"
+    },
+    "cta": {
+      "tryTool": "Try the tool",
+      "open": "Open"
+    },
+    "cards": {
+      "lessonPlan": {
+        "title": "Lesson plans",
+        "body": "Structured lesson drafts you can edit."
+      },
+      "questions": {
+        "title": "Exams and questions",
+        "body": "Varied questions with an answer key, ready to review."
+      },
+      "remedial": {
+        "title": "Remedial plans",
+        "body": "Suggested support plans for you to review before use."
+      },
+      "students": {
+        "title": "Student profile",
+        "body": "One place for each student's profile."
+      }
+    },
+    "strip": {
+      "bilingual": {
+        "title": "Arabic and English",
+        "body": "Interface and output in two languages"
+      },
+      "tap": {
+        "title": "Tap-based choices",
+        "body": "Grade, subject, and style without typing"
+      },
+      "review": {
+        "title": "You review and decide",
+        "body": "Every output is an editable draft"
+      },
+      "stage": {
+        "title": "For the intermediate stage",
+        "body": "Grades 7 to 9"
+      }
+    },
+    "a11y": {
+      "logo": "Lumora — home",
+      "primaryNav": "Main",
+      "toolsRow": "Teacher tools",
+      "benefits": "Platform benefits",
+      "heroArt": "Decorative background"
+    }
   }
 }
