@@ -18,6 +18,33 @@ export const tokens = {
     gold: "#D4AF37",
     /** Page ground. */
     offWhite: "#F8F9FA",
+
+    /* ----------------------------------------------------------------------
+       Landing-page extension tokens — OWNER-APPROVED for the landing page
+       (2026-11-01). They deliberately permit on that surface what the base
+       palette forbids: gradients, translucent glass cards, gold buttons and
+       gold accents, and a purple-and-gold treatment.
+
+       Every value below is MEASURED from the owner's reference mockup, not
+       chosen. Sampling positions and the measurement method are recorded in
+       docs/design/premium-brief.md. Do not round these to a "nicer" value —
+       the point is that they come from the artwork.
+       ---------------------------------------------------------------------- */
+
+    /** Headline ink. Measured: mockup headline set, x150-590 y195-250. */
+    "purple-900": "#23033F",
+    /** Highlighted card fill. Measured: mockup card 2 body, x715-745 y600-660. */
+    "purple-800": "#2F0B49",
+    /** Light tint ground (badge, chips, strip). Measured: mockup strip x100-1300 y880-935. */
+    "lavender-100": "#F5E9F4",
+    /** Mid tint / hairline. Measured: mockup strip upper band x1100-1300 y815-850. */
+    "lavender-300": "#E7D1E5",
+    /** Gold button ramp, top edge. Measured: mockup button (98,550). */
+    "gold-300": "#FAD28F",
+    /** Gold button ramp, mid. Measured: mockup button (98,570). */
+    "gold-500": "#F1BD70",
+    /** Gold button ramp, lower band. Measured: mockup button x100-120 y590-598. */
+    "gold-700": "#E8AA57",
   },
   /** System states, permitted outside the brand palette by spec. */
   states: {

@@ -1,0 +1,901 @@
+/* ==========================================================================
+   LUMORA — landing page: the reference composition.
+
+   OWNER-APPROVED TREATMENTS (2026-11-01). On this surface, and only here, the
+   following are permitted and are NOT violations of DESIGN.md: gradients,
+   glass-like translucent cards, gold buttons, gold accents, and a
+   purple-and-gold treatment over a photographic background. Everywhere else the
+   base rules still stand (gold never carries body text, no gradients, no
+   glass). See DESIGN.md "Owner-approved landing exceptions".
+
+   Still binding here: El Messiri / IBM Plex Sans Arabic / IBM Plex Sans only;
+   Arabic takes no letter-spacing and no italics; body line-height >= 1.6 and the
+   display headline >= 1.15; no text under 12px; AA contrast; 44px tap targets;
+   reduced motion respected; the logo is never recoloured.
+
+   Every colour below is a token. There is no literal hex in this file.
+
+   COORDINATE SYSTEM
+   The reference frame is 1672 x 941. The whole first screen (header + hero +
+   cards + strip) is 100svh, and every part is placed as a percentage of that
+   frame so the composition holds its proportions at any width.
+   ========================================================================== */
+
+:root {
+  /* The reference header block is ~11% of a 941px frame. Clamped so it does not
+     collapse on a short window. The hero screen subtracts this value to work out
+     how tall the frame is. */
+  --lp-header-h: clamp(72px, 11vh, 112px);
+}
+
+.lp-screen {
+  /* Measured against the header: the reference header block is ~11% of a
+     941px frame. `--lp-header-h` itself lives in :root below, because the
+     header is a sibling of this element and has to read the same value. */
+  --lp-radius-card: 24px;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  /* The artwork starts at y=0 in the reference, i.e. BEHIND the header. The
+     header is sticky and in flow, so the screen is pulled up by exactly the
+     header's height and the flow is pushed back down by the same amount. The
+     frame then begins at y=0 while the header keeps its normal behaviour. */
+  margin-top: calc(-1 * var(--lp-header-h));
+  padding-top: var(--lp-header-h);
+
+  /* At 1672x941 the first screen is exactly the viewport; 640px is the floor
+     the brief sets for a very short window. */
+  min-height: max(100svh, 640px);
+
+  /* Behind the artwork: the artwork has a large transparent region on the left
+     (the "fog"), so this is what shows through it and what prevents a flash of
+     white before the LCP image decodes. */
+  background: var(--lumora-lavender-100);
+}
+
+/* The artwork layer. Decorative: alt="" and aria-hidden, never mirrored. */
+.lp-screen__art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.lp-screen__img {
+  object-fit: cover;
+  /* The skyline sits right of centre in the source; keep it there when a short
+     window crops the frame vertically. */
+  object-position: 60% center;
+}
+
+/* --------------------------------------------------------------------------
+   The text column
+
+   PHYSICAL left, on purpose and in both languages. The reference fixes the
+   composition: the text lives where the artwork's fog is, the art and the cards
+   live on the physical right, and the artwork is never mirrored. Only what is
+   INSIDE the column follows the language — alignment, and the order of the
+   buttons.
+   -------------------------------------------------------------------------- */
+.lp-copy {
+  position: absolute;
+  left: 5.4vw;          /* physical: the reference puts the column 5.4vw from the left edge */
+  top: 13.9%;           /* physical: the badge row starts at ~14% of the frame height */
+  width: 30vw;          /* the reference column is ~30vw wide */
+  z-index: 2;
+  text-align: start;    /* language-aware: right in Arabic, left in English */
+}
+
+.lp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding-inline: clamp(0.8rem, 1vw, 1.15rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lumora-lavender-100) 66%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lumora-lavender-300) 90%, transparent);
+  color: var(--lumora-purple-900);
+  font-size: clamp(0.8rem, 0.45vw + 0.62rem, 1rem);
+  font-weight: 500;
+  line-height: 1.2;
+}
+.lp-badge svg {
+  flex: none;
+  color: var(--lumora-purple-800);
+}
+
+.lp-headline {
+  margin: clamp(0.4rem, 0.9vh, 0.8rem) 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  /* Sized so the LONGER of the two lines fills the 30vw column rather than
+     wrapping into a third line: measured 612px natural width at 93.6px, so the
+     scale factor that lands on ~30vw is 4.5vw. */
+  font-size: clamp(1.7rem, 4.35vw, 4.7rem);
+  line-height: 1.15;   /* display headline: >= 1.15, for Arabic and Latin alike */
+  color: var(--lumora-purple-900);
+}
+/* Two lines of the Arabic headline (2 x 1.15 x 4.35vw = 10vw) is the height the
+   reference gives the headline block. English sets the same words in fewer
+   pixels, so without this the whole column below it would ride up by ~4% of the
+   frame and the two languages would no longer share one composition. */
+[lang="en"] .lp-headline {
+  font-size: clamp(1.6rem, 2.9vw, 3.1rem);
+  min-height: 10vw;
+}
+.lp-headline span {
+  display: block;
+}
+
+.lp-subtext {
+  margin: clamp(0.4rem, 0.8vh, 0.75rem) 0 0;
+  max-width: 34vw;
+  font-family: var(--font-arabic);
+  font-weight: 500;
+  font-size: clamp(1rem, 1.6vw, 1.65rem);
+  line-height: 1.6;    /* body: >= 1.6 */
+  color: color-mix(in srgb, var(--lumora-purple-900) 94%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Chips — two plain statements, not controls. They are <li>, not <a>.
+   -------------------------------------------------------------------------- */
+.lp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.5rem, 0.9vw, 0.85rem);
+  margin: clamp(0.5rem, 1vh, 0.9rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-chip {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 44px;
+  padding: 0.45rem clamp(0.6rem, 0.9vw, 0.9rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lumora-lavender-300) 92%, transparent);
+  color: var(--lumora-purple-900);
+}
+.lp-chip__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lumora-lavender-300) 60%, transparent);
+  color: var(--lumora-purple-800);
+}
+.lp-chip__label {
+  max-width: 10.5rem;
+  font-size: clamp(0.82rem, 0.35vw + 0.68rem, 1rem);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+
+   DOM order is primary-then-secondary, so the primary button lands on the
+   reading-order start side in each language without a rule.
+   -------------------------------------------------------------------------- */
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  /* The card row starts 5.3vw inside this column's right edge (5.9vw from the
+     frame's right, 64vw wide). Capping the row there keeps the buttons out from
+     under the cards in Arabic, where the row is right-aligned and would
+     otherwise run straight into the first card. */
+  width: calc(100% - 5.3vw);
+  gap: clamp(0.5rem, 0.9vw, 0.9rem);
+  /* PHYSICAL right margin, deliberately, and it MUST come after the shorthand:
+     in Arabic the row hugs the column's right edge, so the width alone is not
+     enough — this is what pulls that edge back to 30.1% of the frame, where the
+     card row begins. In English the row is left-aligned and the margin only
+     consumes the space the row does not use, so both languages end up with the
+     same box. */
+  margin: clamp(0.5rem, 1vh, 0.9rem) 5.3vw 0 0;
+}
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: clamp(48px, 6vh, 58px);
+  padding-inline: clamp(1rem, 1.6vw, 1.7rem);
+  border-radius: 999px;
+  font-size: clamp(0.9rem, 0.35vw + 0.78rem, 1.05rem);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  transition: transform 180ms var(--ease), box-shadow 180ms var(--ease),
+    background-color 180ms var(--ease);
+}
+.lp-btn--gold {
+  /* The measured gold ramp: the top of the reference button to its lower band. */
+  background: linear-gradient(
+    180deg,
+    var(--lumora-gold-300) 0%,
+    var(--lumora-gold-500) 55%,
+    var(--lumora-gold-700) 100%
+  );
+  color: var(--lumora-purple-900);
+  border: 1px solid color-mix(in srgb, var(--lumora-gold-700) 85%, transparent);
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--lumora-gold-700) 80%, transparent);
+}
+.lp-btn--outline {
+  background: color-mix(in srgb, white 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lumora-lavender-300) 95%, transparent);
+  color: var(--lumora-purple-900);
+}
+.lp-btn:hover {
+  transform: translateY(-2px);
+}
+.lp-btn--gold:hover {
+  box-shadow: 0 14px 28px -12px color-mix(in srgb, var(--lumora-gold-700) 95%, transparent);
+}
+.lp-btn--outline:hover {
+  background: color-mix(in srgb, white 80%, transparent);
+}
+
+/* Directional arrow: the same glyph means "onward" in both languages, so it is
+   mirrored by CSS in RTL rather than redrawn. */
+.lp-arrow {
+  flex: none;
+  transition: transform 180ms var(--ease);
+}
+[dir="rtl"] .lp-arrow--right {
+  transform: scaleX(-1);
+}
+[dir="rtl"] .lp-btn:hover .lp-arrow--right {
+  transform: scaleX(-1) translateX(2px);
+}
+.lp-btn:hover .lp-arrow--right {
+  transform: translateX(2px);
+}
+
+/* --------------------------------------------------------------------------
+   The card row
+
+   PHYSICAL right and anchored to it, in both languages: the reference fixes the
+   row against the right edge of the frame. Reading order inside the row follows
+   the document direction, so card 1 is the rightmost in Arabic and the leftmost
+   in English.
+   -------------------------------------------------------------------------- */
+.lp-cards {
+  position: absolute;
+  right: 5.9vw;         /* physical: the reference leaves 5.9vw at the physical right */
+  top: 58%;             /* cards occupy 58%..81% of the frame height */
+  width: 64vw;
+  height: 23%;
+  z-index: 2;
+}
+.lp-cards__row {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.55rem, 1.05vw, 1.05rem);
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-cards__row > li {
+  display: flex;
+  flex: 1 1 0;
+  height: 100%;
+}
+
+/* The whole card is one link: no nested interactive elements to get wrong. */
+.lp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  padding: clamp(0.85rem, 1.35vw, 1.5rem);
+  border-radius: var(--lp-radius-card);
+  /* Solid 92% white is the baseline; the glass treatment is opted into below. */
+  background: color-mix(in srgb, white 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lumora-lavender-300) 85%, transparent);
+  box-shadow: 0 18px 40px -28px color-mix(in srgb, var(--lumora-purple-800) 70%, transparent);
+  color: var(--lumora-purple-900);
+  text-decoration: none;
+  transition: transform 200ms var(--ease), box-shadow 200ms var(--ease);
+}
+.lp-card__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: clamp(2.2rem, 2.6vw, 3rem);
+  height: clamp(2.2rem, 2.6vw, 3rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lumora-purple-800) 10%, transparent);
+  color: var(--lumora-purple-800);
+}
+.lp-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 0.85vw + 0.7rem, 1.5rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.lp-card__body {
+  margin: 0;
+  font-size: clamp(0.85rem, 0.4vw + 0.72rem, 1rem);
+  line-height: 1.6;   /* body: >= 1.6 */
+  color: color-mix(in srgb, var(--lumora-purple-900) 82%, transparent);
+}
+.lp-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  font-size: clamp(0.82rem, 0.3vw + 0.72rem, 0.95rem);
+  font-weight: 600;
+}
+.lp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 52px -28px color-mix(in srgb, var(--lumora-purple-800) 85%, transparent);
+}
+
+/* The highlighted card. No crown, no badge, and no usage claim — the gold edge
+   and the lift are the whole emphasis. */
+.lp-card--featured {
+  background: var(--lumora-purple-800);
+  border: 2px solid var(--lumora-gold-500);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--lumora-gold-500) 55%, transparent),
+    0 22px 54px -26px color-mix(in srgb, var(--lumora-gold-700) 85%, transparent);
+  color: white;
+  transform: translateY(-1.5%);
+}
+.lp-card--featured .lp-card__icon {
+  background: color-mix(in srgb, white 16%, transparent);
+  color: var(--lumora-gold-300);
+}
+.lp-card--featured .lp-card__body {
+  color: color-mix(in srgb, white 88%, transparent);
+}
+.lp-card--featured .lp-card__cta {
+  align-self: flex-start;
+  min-height: 44px;
+  padding-inline: 1rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--lumora-gold-300) 0%,
+    var(--lumora-gold-500) 60%,
+    var(--lumora-gold-700) 100%
+  );
+  color: var(--lumora-purple-900);
+}
+.lp-card--featured:hover {
+  transform: translateY(calc(-1.5% - 4px));
+}
+
+/* Glass from 768px up, and only where the engine actually supports it —
+   everywhere else the 92% white above stands, which is opaque enough to stay
+   legible over the artwork. */
+@media (min-width: 768px) {
+  @supports ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    .lp-card {
+      background: color-mix(in srgb, white 76%, transparent);
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+    }
+    /* The featured card is already opaque: blurring behind it would only cost
+       paint for no visual effect. */
+    .lp-card--featured {
+      background: var(--lumora-purple-800);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The strip
+
+   Four benefits over the bottom band of the frame, with the artwork's dark
+   purple wave showing at the end side. A flat 92% lavender surface sits behind
+   the text rather than the artwork itself, because the waves are not flat enough
+   to carry small text at AA.
+   -------------------------------------------------------------------------- */
+.lp-strip {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 14.5%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  background: color-mix(in srgb, var(--lumora-lavender-100) 92%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--lumora-lavender-300) 85%, transparent);
+}
+.lp-strip__items {
+  display: flex;
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+  /* PHYSICAL padding-right: the logo block below is pinned to the physical
+     right in both languages, so the items must stop short of it physically. */
+  padding-inline-start: clamp(1rem, 5.4vw, 6rem);
+  padding-right: 30vw;
+  list-style: none;
+}
+.lp-strip__item {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  padding-inline: clamp(0.5rem, 1.3vw, 1.4rem);
+}
+.lp-strip__item + .lp-strip__item {
+  border-inline-start: 1px solid color-mix(in srgb, var(--lumora-lavender-300) 95%, transparent);
+}
+.lp-strip__icon {
+  flex: none;
+  color: var(--lumora-gold-700);
+}
+.lp-strip__item:nth-child(even) .lp-strip__icon {
+  color: var(--lumora-purple-800);
+}
+.lp-strip__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(0.9rem, 0.4vw + 0.76rem, 1.1rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--lumora-purple-900);
+}
+.lp-strip__body {
+  display: block;
+  font-size: clamp(0.78rem, 0.25vw + 0.7rem, 0.92rem);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--lumora-purple-900) 78%, transparent);
+}
+
+/* The logo block.
+
+   PHYSICAL right and bottom, in both languages, and sized to cover the blurry
+   artefact that sits in the artwork at roughly x 78-100%, y 86-100% of the
+   frame. The strip band is that same vertical band, so a 30vw block pinned to
+   the physical right covers it at every breakpoint. This is a layout fix, not an
+   edit to the image.
+
+   No inverse logo exists in the repository, so the official dark horizontal
+   lockup sits on a small off-white rounded plate — the fallback the brief
+   allows. The logo is neither recoloured nor redrawn. */
+.lp-plate {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 30vw;
+  min-width: 240px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    200deg,
+    var(--lumora-purple-800) 0%,
+    var(--lumora-purple-900) 72%
+  );
+  /* Physical top-left sweep, mirroring the artwork's wave as it leaves the
+     frame at the bottom-right. */
+  border-top-left-radius: 58% 100%;
+}
+.lp-plate__inner {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem clamp(0.7rem, 1vw, 1rem);
+  border-radius: 14px;
+  background: color-mix(in srgb, white 94%, transparent);
+}
+.lp-plate__logo {
+  height: clamp(30px, 2.6vw, 44px);
+  width: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Focus
+
+   One ring has to read on both the light surfaces and the dark featured card,
+   and no single brand colour does: purple-900 vanishes on the dark card, and
+   every gold in the ramp is under 3:1 on lavender. So the ring is two-tone —
+   a purple-900 outline with a gold-500 halo outside it. Measured in
+   docs/design/premium-brief.md.
+   -------------------------------------------------------------------------- */
+.lp-card:focus-visible,
+.lp-btn:focus-visible,
+.lp-plate__inner:focus-visible {
+  outline: 2px solid var(--lumora-purple-900);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--lumora-gold-500);
+  border-radius: var(--lp-radius-card);
+}
+.lp-btn:focus-visible,
+.lp-plate__inner:focus-visible {
+  border-radius: 999px;
+}
+
+/* --------------------------------------------------------------------------
+   Entrance
+
+   Transform and opacity only. The stagger is expressed as animation-delay so
+   the whole thing works without a line of JavaScript, and the page is a
+   complete, readable document if the stylesheet's animation never runs.
+   -------------------------------------------------------------------------- */
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.lp-rise {
+  animation: lp-rise 620ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+}
+.lp-rise--1 { animation-delay: 0ms; }
+.lp-rise--2 { animation-delay: 100ms; }
+.lp-rise--3 { animation-delay: 200ms; }
+.lp-rise--4 { animation-delay: 300ms; }
+.lp-rise--5 { animation-delay: 400ms; }
+.lp-rise--6 { animation-delay: 500ms; }
+.lp-rise--7 { animation-delay: 600ms; }
+
+/* The background image never animates: it is the LCP element, and moving it
+   would both delay the paint and move the thing being measured. */
+
+/* ==========================================================================
+   Below 1280px the absolute composition is dropped for a flow layout, because
+   the frame is no longer wide enough for a 30vw column and a 64vw card row to
+   sit side by side without either becoming unreadable. The order of the page is
+   unchanged; only the placement is.
+   ========================================================================== */
+@media (max-width: 1279px) {
+  .lp-screen {
+    display: flex;
+    flex-direction: column;
+    padding-top: calc(var(--lp-header-h) + 3vh);
+  }
+  .lp-copy {
+    position: static;
+    width: 55%;
+    /* PHYSICAL left, deliberately, exactly as in the desktop composition: the
+       text sits where the artwork is open and the cards sit on the other side.
+       Reading order governs what is inside the column, not where the column is.
+       (With `margin-inline-start` this column lands on the skyline in Arabic,
+       where dark type over lit towers is unreadable.) */
+    margin-left: 5vw;
+    margin-right: auto;
+    padding: 0;
+  }
+  .lp-headline {
+    font-size: clamp(2rem, 5.2vw, 3.6rem);
+  }
+  [lang="en"] .lp-headline {
+    font-size: clamp(1.6rem, 3.6vw, 2.5rem);
+  }
+  .lp-subtext,
+  .lp-chips,
+  .lp-actions {
+    max-width: none;
+  }
+  .lp-cards {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: clamp(1.4rem, 3vh, 2.4rem) 5vw 0;
+  }
+  .lp-cards__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    height: auto;
+    gap: clamp(0.7rem, 1.6vw, 1.1rem);
+  }
+  .lp-cards__row > li {
+    height: auto;
+  }
+  .lp-strip {
+    position: relative;
+    inset-inline: auto;
+    bottom: auto;
+    height: auto;
+    margin-top: auto;       /* keeps the strip on the bottom edge of the screen */
+    padding: clamp(0.9rem, 2vh, 1.4rem) 0;
+    display: block;
+  }
+  .lp-strip__items {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    padding-inline-start: 5vw;
+    padding-right: 27vw;    /* physical: clears the logo block on the physical right */
+  }
+  .lp-plate {
+    width: 27vw;
+    min-width: 200px;
+  }
+  .lp-plate__logo {
+    height: clamp(26px, 3vw, 38px);
+  }
+}
+
+/* ==========================================================================
+   Phones. The artwork becomes a band across the top, its lower edge dissolving
+   into the page surface, and everything below it is a single readable column.
+   ========================================================================== */
+@media (max-width: 767px) {
+  .lp-screen {
+    padding-top: calc(var(--lp-header-h) + 46vw);
+  }
+  .lp-screen__art {
+    top: 0;
+    inset-inline: 0;
+    bottom: auto;
+    height: 62vw;
+    min-height: 200px;
+  }
+  .lp-screen__img {
+    object-position: 50% 46%;
+  }
+  /* Softens the band's lower edge into the page surface. A mask would cut the
+     image; a gradient of the same surface colour over its foot leaves the pixels
+     underneath intact. */
+  .lp-screen__art::after {
+    content: "";
+    position: absolute;
+    inset: 58% 0 0 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--lumora-lavender-100) 70%, transparent) 62%,
+      var(--lumora-lavender-100) 100%
+    );
+  }
+  .lp-copy {
+    width: auto;
+    margin-inline-start: 0;
+    padding: 0 5vw;
+  }
+  .lp-headline {
+    font-size: clamp(2.05rem, 9.2vw, 3.1rem);
+  }
+  [lang="en"] .lp-headline {
+    font-size: clamp(1.7rem, 7.6vw, 2.6rem);
+  }
+  .lp-subtext {
+    font-size: 1.05rem;
+  }
+  .lp-chips {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-chip__label {
+    max-width: none;
+  }
+  /* Full-width, stacked: the primary action is first in reading order. */
+  .lp-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-btn {
+    width: 100%;
+    height: 52px;
+  }
+  .lp-cards {
+    margin: clamp(1.4rem, 5vw, 2rem) 5vw 0;
+  }
+  .lp-cards__row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lp-card--featured {
+    transform: none;        /* a lift with no room around it reads as a misalignment */
+  }
+  .lp-card--featured:hover {
+    transform: translateY(-4px);
+  }
+  .lp-strip {
+    margin-top: clamp(1.4rem, 5vw, 2rem);
+    padding: 1.1rem 5vw 1.3rem;
+  }
+  .lp-strip__items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem 1rem;
+    padding-inline-start: 0;
+    padding-right: 0;
+  }
+  /* A vertical hairline between grid cells is ambiguous once the grid wraps, so
+     the 2x2 keeps the separation as space rather than borders. */
+  .lp-strip__item + .lp-strip__item {
+    border-inline-start: none;
+  }
+  .lp-strip__item {
+    padding-inline: 0;
+    align-items: flex-start;
+  }
+  /* The plate leaves the corner and becomes the last block of the band. The
+     mobile crop of the artwork stops well above the artefact, so there is
+     nothing here for it to cover. */
+  .lp-plate {
+    position: static;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    margin: 0 5vw;
+    padding: 1rem;
+    border-top-left-radius: 24px;
+    border-radius: 24px;
+  }
+}
+
+/* The header keeps the sticky behaviour it has on the rest of the public site:
+   it stays put and gains a surface once the page scrolls. */
+.lp-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-rise {
+    animation: none;
+  }
+  .lp-card,
+  .lp-btn,
+  .lp-arrow {
+    transition: none;
+  }
+  .lp-card:hover,
+  .lp-btn:hover {
+    transform: none;
+  }
+  .lp-card--featured:hover {
+    transform: translateY(-1.5%);
+  }
+  .lp-btn:hover .lp-arrow--right,
+  [dir="rtl"] .lp-btn:hover .lp-arrow--right {
+    transform: none;
+  }
+  [dir="rtl"] .lp-arrow--right {
+    transform: scaleX(-1);
+  }
+}
+
+/* ==========================================================================
+   Header
+
+   The artwork is the header's ground, so the header has no surface of its own
+   until the page scrolls. This replaces the off-white bar the header carries on
+   the other public pages; it is scoped to the landing stylesheet, which only the
+   landing page imports.
+   ========================================================================== */
+.site-header {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.site-header[data-scrolled="true"] {
+  background: color-mix(in srgb, var(--lumora-paper) 97%, transparent);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  border-bottom-color: var(--lumora-line);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--lumora-navy) 5%, transparent),
+    0 8px 24px -18px color-mix(in srgb, var(--lumora-navy) 42%, transparent);
+}
+
+.lp-header__bar {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 2.4rem);
+  width: 100%;
+  height: var(--lp-header-h);
+  padding-inline: 5.4vw;
+  margin-inline: auto;
+}
+.lp-header__logo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  /* The lockup is shorter than the 44px minimum at narrow widths; the link is
+     the target, so the link carries the minimum. */
+  min-height: 44px;
+  border-radius: 8px;
+}
+.lp-header__lockup {
+  height: clamp(40px, 3.4vw, 58px);
+  width: auto;
+}
+.lp-header__nav {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .lp-header__nav {
+    display: block;
+  }
+}
+.lp-header__nav ul {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.2vw, 2.2rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: var(--lumora-purple-900);
+  text-decoration: none;
+}
+.lp-nav-link:hover {
+  color: var(--lumora-purple-800);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.lp-header__actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.4rem, 0.9vw, 0.9rem);
+  margin-inline-start: auto;   /* pushed to the inline end of the bar */
+}
+.lp-header__lang {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 0.5rem;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--lumora-purple-900) 78%, transparent);
+  text-decoration: none;
+}
+.lp-header__lang:hover {
+  color: var(--lumora-purple-900);
+}
+
+/* White pill, hairline edge: secondary to the gold call to action beside it. */
+.lp-signin {
+  display: none;
+  align-items: center;
+  gap: 0.45rem;
+  height: 44px;
+  padding-inline: clamp(0.8rem, 1.2vw, 1.2rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lumora-lavender-300) 95%, transparent);
+  color: var(--lumora-purple-900);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background-color 180ms var(--ease);
+}
+@media (min-width: 640px) {
+  .lp-signin {
+    display: inline-flex;
+  }
+}
+.lp-signin:hover {
+  background: white;
+}
+.lp-header__cta {
+  height: 44px;
+  font-size: 0.92rem;
+}

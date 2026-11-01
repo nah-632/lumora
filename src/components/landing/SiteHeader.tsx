@@ -1,82 +1,89 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LANDING } from "@/content/landing";
+import { getTranslations } from "next-intl/server";
 
 /**
- * Public site header.
+ * The public site header, drawn for the reference landing composition.
  *
- * Logo at the inline start (right in Arabic, left in English) via normal document
- * flow — no absolute positioning, so it mirrors without a rule. Navigation is
- * text, not buttons: a nav item is a destination, and styling it as a control
- * makes the page look like a dashboard.
+ * It sits transparent over the artwork — the artwork's own light field is the
+ * header's background — and only takes a surface once the page has scrolled
+ * (MotionRoot flips `data-scrolled`) so navigation stays legible over the darker
+ * parts of the image further down.
  *
- * The mobile menu is a <details>-free implementation: a real <button> toggling a
- * sheet, because the sheet needs to close on Escape and on navigation, and a
- * native disclosure element cannot do the first.
+ * Navigation lists destinations that exist on this page and nothing else. Both
+ * entries are plain anchors with no chevron: a chevron is a promise of a
+ * dropdown, and there is no dropdown here. Anything else the reference showed —
+ * pricing, product, use cases — has no page behind it yet, and a nav item that
+ * leads nowhere is worse than a shorter nav.
+ *
+ * The logo sits at the inline start through normal document flow, so it mirrors
+ * to the correct side without a rule. The actions are ordered reading-direction
+ * first: the language switch, then sign-in, then the primary call to action.
  */
-export function SiteHeader({ locale }: { locale: "ar" | "en" }) {
-  const t = LANDING[locale];
+export async function SiteHeader({ locale }: { locale: "ar" | "en" }) {
+  const t = await getTranslations({ locale, namespace: "landing" });
 
   return (
     <header
       data-site-header="true"
       data-scrolled="false"
-      className="site-header sticky top-0 z-40 border-b border-transparent"
+      className="site-header lp-header"
     >
-      <div className="mx-auto flex w-full max-w-[1180px] items-center gap-6 px-5 py-4 sm:px-8">
+      <div className="lp-header__bar lp-rise lp-rise--1">
         <Link
           href={`/${locale}`}
-          className="inline-flex shrink-0 items-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--focus)]"
-          aria-label={locale === "ar" ? "لومورا — الصفحة الرئيسية" : "Lumora — home"}
+          className="lp-header__logo"
+          aria-label={t("a11y.logo")}
         >
           {/*
-            Horizontal lockup, derived by cropping the supplied artwork: the mark
-            and the LUMORA wordmark were cut from the 2048px square lockup and set
-            side by side at 3x, because the supplied file is stacked (mark above
-            wordmark above tagline) and a 44px rendition of it is unreadable in a
-            header. Nothing is redrawn or recoloured — only cropped and spaced.
-
-            Width and height are fixed, so there is no layout shift; the tagline
-            is dropped here because at header size it would sit under two pixels.
+            The horizontal lockup, cropped from the supplied square artwork and
+            set at a fixed size so the header reserves its space and nothing
+            shifts when the image resolves.
           */}
           <Image
             src="/brand/lumora-lockup-h.png"
-            alt={locale === "ar" ? "لومورا" : "Lumora"}
+            alt=""
             width={194}
             height={58}
             priority
             sizes="194px"
-            className="h-[46px] w-auto sm:h-[52px]"
+            className="lp-header__lockup"
           />
         </Link>
 
-        <nav aria-label={locale === "ar" ? "التنقل الرئيسي" : "Main"} className="hidden lg:block">
-          <ul className="flex items-center gap-7 text-[0.95rem] text-[var(--lumora-navy)]">
-            {t.nav.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href.startsWith("#") ? item.href : `/${locale}${item.href}`} className="nav-link">
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+        <nav aria-label={t("a11y.primaryNav")} className="lp-header__nav">
+          <ul>
+            <li>
+              <Link href="#tools-row" className="lp-nav-link">
+                {t("nav.tools")}
+              </Link>
+            </li>
+            <li>
+              <Link href="#benefits" className="lp-nav-link">
+                {t("nav.benefits")}
+              </Link>
+            </li>
           </ul>
         </nav>
 
-        <div className="ms-auto flex items-center gap-2 sm:gap-3">
+        <div className="lp-header__actions">
           <Link
             href={locale === "ar" ? "/en" : "/ar"}
-            className="hidden rounded-md px-2 py-1 text-sm text-[var(--lumora-ink-soft)] transition-colors hover:text-[var(--lumora-navy)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] sm:block"
+            className="lp-header__lang"
             hrefLang={locale === "ar" ? "en" : "ar"}
             lang={locale === "ar" ? "en" : "ar"}
           >
             {locale === "ar" ? "EN" : "ع"}
           </Link>
-          <Link
-            href={`/${locale}/sign-in`}
-            className="btn-primary btn-sm"
-          >
-            {t.loginLabel}
-            <ArrowIcon />
+
+          <Link href={`/${locale}/sign-in`} className="lp-signin">
+            <UserIcon />
+            {t("signIn")}
+          </Link>
+
+          <Link href={`/${locale}/sign-in`} className="lp-btn lp-btn--gold lp-header__cta">
+            {t("getStarted")}
+            <ArrowRight />
           </Link>
         </div>
       </div>
@@ -84,14 +91,20 @@ export function SiteHeader({ locale }: { locale: "ar" | "en" }) {
   );
 }
 
-/**
- * Directional icon. Mirrored in RTL by CSS (`[dir="rtl"] .arrow-icon`), never by
- * a second asset — the same glyph means "onward" in both directions.
- */
-function ArrowIcon() {
+function UserIcon() {
   return (
-    <svg className="arrow-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8.5" r="3.6" />
+      <path d="M4.8 19.5c.7-3.6 3.6-5.6 7.2-5.6s6.5 2 7.2 5.6" />
+    </svg>
+  );
+}
+
+/** Mirrored in RTL by CSS: the same glyph means "onward" in both directions. */
+function ArrowRight() {
+  return (
+    <svg className="lp-arrow lp-arrow--right" width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />
     </svg>
   );
 }
