@@ -8,22 +8,6 @@
  */
 export const LANDING = {
   ar: {
-    eyebrow: "للمعلم البحريني .. من أجل جيل أكثر تميزاً",
-    // The slogan is the headline. It states what the product is for, in the
-    // teacher's own register, and it is the line the brand is built on — a
-    // description of the software underneath would only repeat the eyebrow.
-    headline: { lead: "نرتقي بالمعلم،", accent: "", rest: "لنرتقي بالوطن" },
-    lead:
-      "منصة تعمل بالعربية والإنجليزية، ترتّب لك يومك الدراسي: من يتابع، ومن يحتاج تنبيهًا، وما الدرس التالي. أنت تقرر، والمنصة تُعدّ.",
-    primaryCta: "ابدأ الآن",
-    secondaryCta: "شاهد عرض توضيحي",
-    nav: [
-      { href: "#features", label: "الميزات" },
-      { href: "#how", label: "كيف تعمل" },
-      { href: "/privacy", label: "الخصوصية" },
-      { href: "#contact", label: "تواصل معنا" },
-    ],
-    loginLabel: "تسجيل الدخول",
     featuresTitle: "أدوات يومية، لا مظاهر.",
     featuresIntro: "أربع أدوات تغطي أهم ما يشغل المعلم في الإعدادية، مبنية على بيانات صفك الحقيقية.",
     features: [
@@ -66,19 +50,6 @@ export const LANDING = {
     footerTagline: "نرتقي بالمعلم، لنرتقي بالوطن",
   },
   en: {
-    eyebrow: "For the Bahraini teacher — for a stronger generation",
-    headline: { lead: "We elevate the teacher,", accent: "", rest: "to elevate the nation" },
-    lead:
-      "A bilingual workspace that orders your school day: who is keeping up, who needs a word, what you teach next. You decide; the platform prepares.",
-    primaryCta: "Get started",
-    secondaryCta: "See a walkthrough",
-    nav: [
-      { href: "#features", label: "Features" },
-      { href: "#how", label: "How it works" },
-      { href: "/privacy", label: "Privacy" },
-      { href: "#contact", label: "Contact" },
-    ],
-    loginLabel: "Sign in",
     featuresTitle: "Daily tools, not decoration.",
     featuresIntro:
       "Four tools covering what actually fills an intermediate-stage teacher's day, built on your own class data.",

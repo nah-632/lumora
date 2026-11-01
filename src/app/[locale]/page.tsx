@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import "@/styles/landing.css";
+// After landing.css on purpose: the reference composition overrides the header's
+// surface and owns the whole first screen, so it has to win the cascade.
+import "@/styles/landing-reference.css";
 import { SiteHeader } from "@/components/landing/SiteHeader";
-import { Hero } from "@/components/landing/Hero";
-import { Features } from "@/components/landing/Features";
+import { LandingHero } from "@/components/landing/LandingHero";
 import { HowItWorks, Showcase, AboutContact } from "@/components/landing/Sections";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MotionRoot } from "@/components/landing/MotionRoot";
@@ -16,6 +18,10 @@ import { MotionRoot } from "@/components/landing/MotionRoot";
  *
  * generateStaticParams is inherited from the parent segment, which already
  * enumerates ar and en; an unknown locale is a 404 rather than a silent fallback.
+ *
+ * The first screen is one composition: header, hero, the four tool cards and the
+ * benefit strip, sized to the frame in the owner's reference. Below it the older
+ * sections continue unchanged.
  */
 const LOCALES = ["ar", "en"] as const;
 
@@ -39,8 +45,7 @@ export default function LandingPage({ params }: { params: { locale: string } }) 
       <MotionRoot />
       <SiteHeader locale={locale} />
       <main>
-        <Hero locale={locale} />
-        <Features locale={locale} />
+        <LandingHero locale={locale} />
         <HowItWorks locale={locale} />
         <Showcase locale={locale} />
         <AboutContact locale={locale} />

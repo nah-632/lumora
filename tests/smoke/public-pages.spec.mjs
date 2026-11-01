@@ -134,3 +134,36 @@ test.describe("sign-in renders its form", () => {
     });
   }
 });
+/**
+ * The bare domain.
+ *
+ * `/` had no test, and it was broken in the quietest possible way: a static page
+ * whose build-time `redirect()` was served as a 307 with NO Location header, so
+ * anyone typing the domain got an error page. A status check alone would have
+ * passed — 307 is a redirect status — which is why the Location assertion is the
+ * point of this test.
+ */
+test.describe("/", () => {
+  test("redirects to a locale landing page with a real Location", async ({ request }) => {
+    const res = await request.get("/", { maxRedirects: 0 });
+
+    expect([307, 308], `GET / returned ${res.status()}`).toContain(res.status());
+    const location = res.headers()["location"];
+    expect(location, "a redirect without a Location header is a dead link").toBeTruthy();
+    expect(location).toMatch(/\/(ar|en)$/);
+  });
+
+  test("follows the visitor's language, Arabic by default", async ({ request }) => {
+    const en = await request.get("/", {
+      maxRedirects: 0,
+      headers: { "accept-language": "en-GB,en;q=0.9" },
+    });
+    expect(en.headers()["location"]).toMatch(/\/en$/);
+
+    const ar = await request.get("/", {
+      maxRedirects: 0,
+      headers: { "accept-language": "fr-FR,fr;q=0.9" },
+    });
+    expect(ar.headers()["location"]).toMatch(/\/ar$/);
+  });
+});

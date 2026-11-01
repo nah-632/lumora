@@ -13,6 +13,7 @@ export type AuthCode =
   | "email_taken"
   | "rate_limited"
   | "not_configured"
+  | "unauthorized"
   | "failed";
 
 export interface AuthResult {
