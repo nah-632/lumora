@@ -307,7 +307,7 @@ branch is not allowed to touch, so it is reported rather than fixed. The fix is
 one plugin call in `next.config.mjs` plus a smoke test of both sign-in routes.
 ## ADR-015 — Backend move to CranL: feasibility spike outcome (database, auth, storage)
 
-**Date:** 2026-11-08 · **Status:** PROPOSED (owner decision pending)
+**Date:** 2026-11-08 · **Status:** DECIDED (2026-11-08) — do not migrate; Supabase remains the backend
 **Evidence:** docs.cranl.com read on 2026-11-08; CranL REST API `GET /api/v1/openapi.json`
 (238 operations, 539 KB); live account calls `whoami`, `account`, `regions`, `databases`;
 CranL CLI v1.7.0; current repository state at `f34188b`.
@@ -368,7 +368,9 @@ Measured coupling in the current repository:
 
 ### Decision
 
-Not made. Recorded for the owner.
+**Decided by the owner on 2026-11-08: do not migrate.** LUMORA keeps Supabase as its database, authentication and storage backend. No backend move is planned. This ADR is kept as evidence of what was verified so the question is not reopened from memory later.
+
+The blocking unknowns below were never resolved and no longer need to be, unless the decision is revisited.
 
 ### Recommendation (PROPOSED)
 
