@@ -305,3 +305,106 @@ this branch and is unrelated to the layout move — the landing page does not us
 `next-intl`'s `useTranslations`. It sits in the authentication surface, which this
 branch is not allowed to touch, so it is reported rather than fixed. The fix is
 one plugin call in `next.config.mjs` plus a smoke test of both sign-in routes.
+## ADR-015 — Backend move to CranL: feasibility spike outcome (database, auth, storage)
+
+**Date:** 2026-11-08 · **Status:** DECIDED (2026-11-08) — do not migrate; Supabase remains the backend
+**Evidence:** docs.cranl.com read on 2026-11-08; CranL REST API `GET /api/v1/openapi.json`
+(238 operations, 539 KB); live account calls `whoami`, `account`, `regions`, `databases`;
+CranL CLI v1.7.0; current repository state at `f34188b`.
+
+### Context
+
+The owner is considering moving the database, authentication and object storage
+from Supabase to CranL. A spike was run before any decision. **Nothing was
+migrated, created or changed:** every CranL call made during the spike was a read,
+or an explicit dry run using `plan: true`, which the API documents as "describe
+what would change without changing anything".
+
+### What CranL actually provides (verified)
+
+| Capability | Finding | Source |
+|---|---|---|
+| Managed PostgreSQL | Yes; types postgresql, mysql, mariadb, mongodb, redis | platform/databases; openapi `create_database` |
+| PostgreSQL version | **Not documented, not selectable.** `create_database` accepts only name, type, region, project_id, database_name | openapi schema |
+| Extensions (pgvector, pgcrypto) | **UNKNOWN — not documented anywhere.** "pgvector" and "pgcrypto" occur 0 times in the OpenAPI document and are absent from the databases pages | openapi; docs |
+| Backups | Yes. Scheduled with frequency hourly / every_6_hours / every_12_hours / daily / weekly, retention 1–30, IANA timezone. Manual backups keep the newest 10. A safety backup is taken before a restore. Backups are downloadable | openapi backup endpoints |
+| Point-in-time restore | **Not documented.** 0 occurrences of "pitr" / "point in time". Recovery is backup-granular, so RPO equals the backup interval (1 hour minimum), not seconds | openapi |
+| Restore path | `into: "new"` (default) builds a new database beside the original; `into: "replace"` overwrites this one after a safety backup. Owners and admins only | openapi restore |
+| Connection limits / pooling | **UNKNOWN — not documented.** 0 occurrences of pooler / pgbouncer / pooling / "connection limit" | openapi |
+| Private networking | App-to-database traffic inside CranL stays internal either way; external access is an opt-in public port, used by snapshot, migration and import tooling | openapi external-access |
+| Regions | germany-1, netherlands-1, us-east-1, riyadh-1, jeddah-1, egypt-1, india-1 (live). Announced: turkey-1, uae-1, singapore-1, japan-1 | live `/regions` |
+| MENA regions on this account | **Not available** — Riyadh, Jeddah and Cairo require a paid plan | live `/account`; docs/cli/regions |
+| Scheduled jobs | Yes — Schedules (cron jobs) | platform/schedules |
+| Background workers | Yes — Queues and Workers, with retries, dead letters and autoscaling | queues docs |
+| Object storage | Yes — S3-compatible buckets. But 0 buckets on Free, 1 on Pro, 5 on Enterprise | live `/account`; billing |
+| Email sending | Yes — CranL Emails, included on the Free plan | billing |
+| Managed Supabase backend | **Yes** — `create_backend` provisions a managed Supabase (Postgres, auth, storage, realtime) or Convex backend | openapi backends |
+| API key scopes | Presets full / deploy / readonly / builder, granular `area:*` scopes, expiry, named-resource limits, monthly spend cap | getting-started/authentication |
+| CLI on this device | **Does not run.** The released binary is Bun-compiled; under iSH it prints Bun's own help and fails authentication. The REST API works normally over curl | verified on device |
+
+### Current account state (live)
+
+Account **Lumora**, plan **free**, region **netherlands-1 only**; limits
+projects 1 / apps+databases 2 combined / buckets 0; features `backends: false`,
+`storage: false`, `mena_regions: false`, `emails: true`. One credential exists with
+scopes `["*"]` expiring 2027-02-06 — far broader than the least-privilege rule in
+the constitution requires, and worth narrowing.
+
+### Why this is not a like-for-like swap
+
+Supabase is not merely a Postgres host. It supplies Auth (sign-up, sign-in,
+password hashing, email confirmation, password reset, sessions/JWT, rate
+limiting), PostgREST, RLS bound to `auth.uid()`, Storage and pgvector. CranL's raw
+PostgreSQL supplies none of those.
+
+Measured coupling in the current repository:
+
+- **136 occurrences of `auth.uid()`** across **7** migration files
+- **90 `CREATE POLICY`** statements
+- migrations require the **citext, pgcrypto and uuid-ossp** extensions
+- the 30-day purge job calls `cron.schedule` (pg_cron), with a fallback that only raises a notice
+- application code is much less coupled than the schema: **16 files** reference Supabase, and `src/server/supabase.ts` is already a thin seam (`readSupabaseEnv`, `requireUser`, `restRequest`) through which the server request path passes
+- **no storage code exists yet** in `src/`; the curriculum upload feature is not built, so today's storage replacement cost is zero
+
+### Decision
+
+**Decided by the owner on 2026-11-08: do not migrate.** LUMORA keeps Supabase as its database, authentication and storage backend. No backend move is planned. This ADR is kept as evidence of what was verified so the question is not reopened from memory later.
+
+The blocking unknowns below were never resolved and no longer need to be, unless the decision is revisited.
+
+### Recommendation (PROPOSED)
+
+Do not move wholesale. Two viable options, in preference order:
+
+1. **Preferred — keep Supabase semantics, host through CranL.** `create_backend`
+   provisions a managed Supabase backend, preserving `auth.uid()`, RLS, Storage and
+   pgvector, so the migrations, the 90 policies and the isolation suite keep
+   working. Requires a paid plan (`backends` is false on Free), and the region must
+   be chosen with Bahrain latency in mind.
+2. **Conditional — CranL raw PostgreSQL.** Only if the pgvector and pgcrypto
+   questions are answered yes, and only alongside a purpose-built auth layer.
+   Otherwise the curriculum retrieval feature (Phase 3.2) has no vector store and
+   the baseline migration cannot run at all.
+
+In both cases the lowest-cost enabler already exists: `src/server/supabase.ts` is
+the single server-side seam, which keeps any future change bounded.
+
+### Blocking unknowns — resolve before any decision
+
+1. Does CranL PostgreSQL ship **pgvector**? Without it, Phase 3.2 hybrid Arabic
+   retrieval cannot be built. Undocumented; needs a live
+   `SELECT * FROM pg_available_extensions` on a throwaway database.
+2. Does it ship **pgcrypto, citext, uuid-ossp**? `0000_baseline.sql` fails without them.
+3. What **PostgreSQL major version** runs? Not selectable, not documented.
+4. **Connection limits and pooling.** The RLS-without-`auth.uid()` design depends on
+   `SET LOCAL` within a transaction; its correctness under a transaction pooler
+   must be proven empirically, not assumed.
+
+### Consequences
+
+- This ADR proposes no migration.
+- The thin-interface work — a repository seam for database access, authentication
+  and storage; portable SQL migrations; Supabase-specific calls confined to one
+  place — proceeds independently of this decision and lowers the cost of either outcome.
+- Any future move must be staged: build in parallel on staging, rewrite the
+  isolation suite first, migrate data, then switch.
